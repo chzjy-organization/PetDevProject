@@ -1,4 +1,4 @@
-include ':app', ":basesdk"
+include ':app', ':module_sip', ":basesdk"
 apply from: './base.gradle'
 
 gradle.ext {

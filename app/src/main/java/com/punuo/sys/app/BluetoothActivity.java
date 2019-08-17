@@ -2,23 +2,21 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.alibaba.fastjson.JSON;
-import com.punuo.sip.SipDevManager;
-import com.punuo.sip.request.SipRequestListener;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.process.ProcessTasks;
-import com.punuo.sys.app.sip.HeartBeatHelper;
-import com.punuo.sys.app.sip.model.RegisterData;
-import com.punuo.sys.app.sip.request.SipDevRegisterRequest;
-import com.punuo.sys.app.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
@@ -26,6 +24,12 @@ import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
+import com.punuo.sys.sip.HeartBeatHelper;
+import com.punuo.sys.sip.SipDevManager;
+import com.punuo.sys.sip.model.RegisterData;
+import com.punuo.sys.sip.request.SipDevRegisterRequest;
+import com.punuo.sys.sip.request.SipGetDevSeedRequest;
+import com.punuo.sys.sip.request.SipRequestListener;
 
 /**
  * Created by han.chen.
@@ -47,6 +51,13 @@ public class BluetoothActivity extends BaseActivity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothChatService = BluetoothChatService.getInstance(this, mBaseHandler);
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        Button setting = findViewById(R.id.setting);
+        setting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Settings.ACTION_SETTINGS));
+            }
+        });
     }
 
     private void init() {

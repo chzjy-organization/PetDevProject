@@ -2,16 +2,16 @@ package com.punuo.sys.app.process;
 
 import android.app.Application;
 
-import com.punuo.sip.ISipConfig;
-import com.punuo.sip.SipConfig;
-import com.punuo.sip.SipDevManager;
-import com.punuo.sip.thread.SipInitThread;
 import com.punuo.sys.sdk.activity.ActivityLifeCycle;
 import com.punuo.sys.sdk.httplib.HttpConfig;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.IHttpConfig;
 import com.punuo.sys.sdk.util.DebugCrashHandler;
 import com.punuo.sys.sdk.util.DeviceHelper;
+import com.punuo.sys.sip.ISipConfig;
+import com.punuo.sys.sip.SipConfig;
+import com.punuo.sys.sip.SipDevManager;
+import com.punuo.sys.sip.thread.SipInitThread;
 
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
@@ -28,7 +28,6 @@ public class ProcessTasks {
         if (DeviceHelper.isApkInDebug()) {
             DebugCrashHandler.getInstance().init(); //崩溃日志收集
         }
-        SerialPortManager.getInstance().initSerialPort();
         app.registerActivityLifecycleCallbacks(ActivityLifeCycle.getInstance());
         HttpConfig.init(new IHttpConfig() {
             @Override
@@ -101,6 +100,6 @@ public class ProcessTasks {
         });
         SipDevManager.setContext(app);
         new SipInitThread().start();
-
+        SerialPortManager.getInstance().initSerialPort();
     }
 }
