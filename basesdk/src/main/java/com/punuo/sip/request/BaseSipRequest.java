@@ -25,6 +25,9 @@ import fr.arnaudguyon.xmltojsonlib.XmlToJson;
 public class BaseSipRequest<T> implements SipMessageProcessor<T> {
     private SipRequestType mSipRequestType;
     private SipRequestListener<T> mSipRequestListener;
+    private Message mMessage;
+    private int mCode;
+    private String mReason;
 
     public BaseSipRequest() {
 
@@ -36,6 +39,13 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
 
     public void setSipRequestType(SipRequestType sipRequestType) {
         mSipRequestType = sipRequestType;
+    }
+
+
+    public void setResponse(Message message, int code, String reason) {
+        mMessage = message;
+        mCode = code;
+        mReason = reason;
     }
 
     /**
@@ -111,12 +121,17 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
             case Register:
                 return SipMessageFactory.createRegisterRequest(getDestNameAddress(), getLocalNameAddress(), getBody());
             case Subscribe:
+                return SipMessageFactory.createSubscribeRequest(getDestNameAddress(), getLocalNameAddress(), getBody());
             case Notify:
                 return SipMessageFactory.createNotifyRequest(getDestNameAddress(), getLocalNameAddress(), getBody());
             case Invite:
+                return SipMessageFactory.createInviteRequest(getDestNameAddress(), getLocalNameAddress(), getBody());
             case Options:
+                return SipMessageFactory.createOptionsRequest(getDestNameAddress(), getLocalNameAddress(), getBody());
             case Bye:
+                return SipMessageFactory.createByeRequest(getDestNameAddress(), getLocalNameAddress());
             case Response:
+                return SipMessageFactory.createResponse(mMessage, mCode, mReason, getBody());
             default:
                 return null;
         }
