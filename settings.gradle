@@ -1,0 +1,6 @@
+include ':app', ":basesdk"
+apply from: './base.gradle'
+
+gradle.ext {
+    sdk = sdk
+}
