@@ -4,9 +4,8 @@ import android.app.Application;
 
 import com.punuo.sip.ISipConfig;
 import com.punuo.sip.SipConfig;
-import com.punuo.sip.SipUserManager;
+import com.punuo.sip.SipDevManager;
 import com.punuo.sip.thread.SipInitThread;
-import com.punuo.sys.sdk.account.AccountManager;
 import com.punuo.sys.sdk.activity.ActivityLifeCycle;
 import com.punuo.sys.sdk.httplib.HttpConfig;
 import com.punuo.sys.sdk.httplib.HttpManager;
@@ -16,6 +15,8 @@ import com.punuo.sys.sdk.util.DeviceHelper;
 
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
+
+import android_serialport_api.SerialPortManager;
 
 /**
  * Created by han.chen.
@@ -27,6 +28,7 @@ public class ProcessTasks {
         if (DeviceHelper.isApkInDebug()) {
             DebugCrashHandler.getInstance().init(); //崩溃日志收集
         }
+        SerialPortManager.getInstance().initSerialPort();
         app.registerActivityLifecycleCallbacks(ActivityLifeCycle.getInstance());
         HttpConfig.init(new IHttpConfig() {
             @Override
@@ -58,8 +60,8 @@ public class ProcessTasks {
         HttpManager.init();
         SipConfig.init(new ISipConfig() {
             NameAddress mServerAddress;
-            NameAddress mUserRegisterAddress;
-            NameAddress mUserNormalAddress;
+            NameAddress mDevRegisterAddress;
+            NameAddress mDevNormalAddress;
             @Override
             public String getServerIp() {
                 return "101.69.255.134";
@@ -67,7 +69,7 @@ public class ProcessTasks {
 
             @Override
             public int getPort() {
-                return 6061;
+                return 6060;
             }
 
             @Override
@@ -80,24 +82,24 @@ public class ProcessTasks {
             }
 
             @Override
-            public NameAddress getUserRegisterAddress() {
-                if (mUserRegisterAddress == null) {
-                    SipURL local = new SipURL(SipConfig.REGISTER_ID, SipConfig.getServerIp(), SipConfig.getPort());
-                    mUserRegisterAddress = new NameAddress(AccountManager.getUserName(), local);
+            public NameAddress getDevRegisterAddress() {
+                if (mDevRegisterAddress == null) {
+                    SipURL local = new SipURL("321000000200150001", SipConfig.getServerIp(), SipConfig.getPort());
+                    mDevRegisterAddress = new NameAddress("321000000200150001", local);
                 }
-                return mUserRegisterAddress;
+                return mDevRegisterAddress;
             }
 
             @Override
-            public NameAddress getUserNormalAddress() {
-                if (mUserNormalAddress == null) {
-                    SipURL local = new SipURL(AccountManager.getUserInfo().userId, SipConfig.getServerIp(), SipConfig.getPort());
-                    mUserNormalAddress = new NameAddress(AccountManager.getUserName(), local);
+            public NameAddress getDevNormalAddress() {
+                if (mDevNormalAddress == null) {
+                    SipURL local = new SipURL("321000000200150001", SipConfig.getServerIp(), SipConfig.getPort());
+                    mDevNormalAddress = new NameAddress("321000000200150001", local);
                 }
-                return mUserNormalAddress;
+                return mDevNormalAddress;
             }
         });
-        SipUserManager.setContext(app);
+        SipDevManager.setContext(app);
         new SipInitThread().start();
 
     }

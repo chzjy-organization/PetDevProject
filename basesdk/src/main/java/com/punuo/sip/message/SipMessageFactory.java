@@ -2,7 +2,7 @@ package com.punuo.sip.message;
 
 import android.text.TextUtils;
 
-import com.punuo.sip.SipUserManager;
+import com.punuo.sip.SipDevManager;
 
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
@@ -24,14 +24,14 @@ public class SipMessageFactory extends MessageFactory {
     private static NameAddress contact;
 
     public static void init() {
-        viaAddress = SipUserManager.getInstance().getViaAddress();
-        hostPort = SipUserManager.getInstance().getPort();
+        viaAddress = SipDevManager.getInstance().getViaAddress();
+        hostPort = SipDevManager.getInstance().getPort();
         sipURL = new SipURL(viaAddress, hostPort);
         contact = new NameAddress(new SipURL(viaAddress, hostPort));
     }
 
     public static Message createRegisterRequest(NameAddress to, NameAddress from, String body) {
-        Message message = createRegisterRequest(SipUserManager.getInstance(), sipURL, to, from, contact);
+        Message message = createRegisterRequest(SipDevManager.getInstance(), sipURL, to, from, contact);
         if (!TextUtils.isEmpty(body)) {
             message.setBody(CONTENT_TYPE, body);
         }
@@ -39,7 +39,7 @@ public class SipMessageFactory extends MessageFactory {
     }
 
     public static Message createNotifyRequest(NameAddress to, NameAddress from, String body) {
-        Message msg = createRequest(SipUserManager.getInstance(), SipMethods.NOTIFY, sipURL,
+        Message msg = createRequest(SipDevManager.getInstance(), SipMethods.NOTIFY, sipURL,
                 to, from, contact, null);
         msg.setBody(CONTENT_TYPE, body);
         return msg;
@@ -47,8 +47,8 @@ public class SipMessageFactory extends MessageFactory {
 
     private static Message createSubscribeRequest(SipProvider sip_provider,  //设备列表
                                                   NameAddress to, NameAddress from) {
-        String via_addr = SipUserManager.getInstance().getViaAddress();
-        int host_port = SipUserManager.getInstance().getPort();
+        String via_addr = SipDevManager.getInstance().getViaAddress();
+        int host_port = SipDevManager.getInstance().getPort();
         SipURL sipURL = new SipURL(via_addr, host_port);
         NameAddress contact = new NameAddress(sipURL);
         return createRequest(sip_provider, SipMethods.SUBSCRIBE, sipURL, to, from, contact, null);

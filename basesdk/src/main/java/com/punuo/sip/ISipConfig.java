@@ -14,7 +14,7 @@ public interface ISipConfig {
 
     NameAddress getServerAddress();
 
-    NameAddress getUserRegisterAddress();
+    NameAddress getDevRegisterAddress();
 
-    NameAddress getUserNormalAddress();
+    NameAddress getDevNormalAddress();
 }

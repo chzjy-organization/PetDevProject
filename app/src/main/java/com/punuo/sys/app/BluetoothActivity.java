@@ -9,16 +9,23 @@ import android.os.Message;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
+import com.punuo.sip.SipDevManager;
+import com.punuo.sip.request.SipRequestListener;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.process.ProcessTasks;
+import com.punuo.sys.app.sip.HeartBeatHelper;
+import com.punuo.sys.app.sip.model.RegisterData;
+import com.punuo.sys.app.sip.request.SipDevRegisterRequest;
+import com.punuo.sys.app.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.activity.BaseActivity;
+import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 
 /**
  * Created by han.chen.
@@ -26,9 +33,11 @@ import com.punuo.sys.sdk.activity.BaseActivity;
  **/
 public class BluetoothActivity extends BaseActivity {
     private static final String TAG = "BluetoothActivity";
+    public static final int MSG_HEART_BEAR_VALUE = 10086;
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothChatService mBluetoothChatService;
+    private WifiManager mWifiManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +46,7 @@ public class BluetoothActivity extends BaseActivity {
         ProcessTasks.commonLaunchTasks(PnApplication.getInstance());
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothChatService = BluetoothChatService.getInstance(this, mBaseHandler);
-        init();
+        mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     }
 
     private void init() {
@@ -46,6 +55,9 @@ public class BluetoothActivity extends BaseActivity {
             mBluetoothAdapter.enable();
         }
         mBluetoothChatService.start();
+        if (!WifiUtil.isWifiEnable(mWifiManager)) {
+            mWifiManager.setWifiEnabled(true);
+        }
     }
 
     @Override
@@ -80,6 +92,10 @@ public class BluetoothActivity extends BaseActivity {
                 }
                 break;
             case Constants.MESSAGE_TOAST:
+                break;
+            case MSG_HEART_BEAR_VALUE:
+                HeartBeatHelper.heartBeat();
+                mBaseHandler.sendEmptyMessageDelayed(MSG_HEART_BEAR_VALUE, HeartBeatHelper.DELAY);
                 break;
             default:
                 break;
@@ -122,6 +138,8 @@ public class BluetoothActivity extends BaseActivity {
                         dis = 1;
                     }
                 }, 400);
+                //TODO 注册sip
+                registerDev();
             }
 
             @Override
@@ -146,5 +164,60 @@ public class BluetoothActivity extends BaseActivity {
             }
         });
         wifiController.connectWifi(wifiMessage);
+    }
+
+    private void registerDev() {
+        SipGetDevSeedRequest getDevSeedRequest = new SipGetDevSeedRequest();
+        getDevSeedRequest.setSipRequestListener(new SipRequestListener<RegisterData>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onSuccess(RegisterData result) {
+                if (result == null) {
+                    return;
+                }
+                sipDevRegister(result);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                HandlerExceptionUtils.handleException(e);
+            }
+        });
+        SipDevManager.getInstance().addRequest(getDevSeedRequest);
+    }
+
+    private void sipDevRegister(RegisterData data) {
+        SipDevRegisterRequest registerRequest = new SipDevRegisterRequest(data);
+        registerRequest.setSipRequestListener(new SipRequestListener<Object>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+                //sip登陆注册成功 开启心跳保活
+                if (!mBaseHandler.hasMessages(MSG_HEART_BEAR_VALUE)) {
+                    mBaseHandler.sendEmptyMessage(MSG_HEART_BEAR_VALUE);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                HandlerExceptionUtils.handleException(e);
+            }
+        });
+        SipDevManager.getInstance().addRequest(registerRequest);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        init();
+        registerDev();
     }
 }

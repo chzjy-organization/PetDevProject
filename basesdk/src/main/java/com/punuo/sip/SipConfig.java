@@ -12,7 +12,7 @@ public class SipConfig {
     //服务器ip
     private static String host = "101.69.255.134";
     //端口号
-    private static int port = 6061;
+    private static int port = 6060;
     //服务器Id
     public static String SERVER_ID = "330100000010000090";
     //用户注册获取用户ID使用
@@ -38,9 +38,9 @@ public class SipConfig {
         return port;
     }
 
-    public static NameAddress getUserRegisterAddress() {
+    public static NameAddress getDevRegisterAddress() {
         if (sSipConfig != null) {
-            return sSipConfig.getUserRegisterAddress();
+            return sSipConfig.getDevRegisterAddress();
         } else {
             throw new RuntimeException("RegisterNameAddress is null, please set RegisterNameAddress");
         }
@@ -54,9 +54,9 @@ public class SipConfig {
         }
     }
 
-    public static NameAddress getUserNormalAddress() {
+    public static NameAddress getDevNormalAddress() {
         if (sSipConfig != null) {
-            return sSipConfig.getUserNormalAddress();
+            return sSipConfig.getDevNormalAddress();
         } else {
             throw new RuntimeException("NormalNameAddress is null, please set NormalNameAddress");
         }
