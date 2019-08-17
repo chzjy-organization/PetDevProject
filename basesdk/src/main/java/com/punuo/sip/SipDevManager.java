@@ -12,6 +12,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.punuo.sip.request.BaseSipRequest;
 import com.punuo.sip.temp.ControlData;
+import com.punuo.sip.temp.ResponseMap;
 import com.punuo.sys.sdk.httplib.ErrorTipException;
 import com.punuo.sys.sdk.httplib.JsonUtil;
 
@@ -156,9 +157,10 @@ public class SipDevManager extends SipProvider {
         }
         if (data.isJsonObject()) {
             JsonObject jsonObject = data.getAsJsonObject();
-            if (jsonObject.has("direction_control")) {
-                JsonElement control = jsonObject.get("direction_control");
-                ControlData controlData = JsonUtil.fromJson(control, ControlData.class);
+            //云台
+            if (jsonObject.has(ResponseMap.DIRECTION_CONTROL)) {
+                JsonElement control = jsonObject.get(ResponseMap.DIRECTION_CONTROL);
+                ControlData controlData = JsonUtil.fromJson(control, ResponseMap.getClazz("direction_control"));
                 if ("left".equals(controlData.operate)) {
                     SerialPortManager.getInstance().writeData(SerialPortManager.TURN_LEFT);
                 } else if ("right".equals(controlData.operate)) {
