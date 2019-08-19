@@ -127,7 +127,7 @@ public class BluetoothActivity extends BaseActivity {
             return;
         }
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiController wifiController = new WifiController(this, wifiManager, false);
+        WifiController wifiController = new WifiController(this, wifiManager);
         wifiController.setServerWifiListener(new OnServerWifiListener() {
             @Override
             public void OnServerConnected(WifiInfo wifiInfo, WifiMessage wifiMessage) {

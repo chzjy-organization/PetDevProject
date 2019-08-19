@@ -20,23 +20,14 @@ public class WifiController {
     private WifiManager mWifiManager;
     private WifiStateReceiver mWifiStateReceiver;
     private WifiMessage mWifiMessage;
-    private OnClientWifiListener mClientWifiListener;
     private OnServerWifiListener mServerWifiListener;
-
-    private boolean isClient;
-
-    public void setClientWifiListener(OnClientWifiListener clientWifiListener) {
-        mClientWifiListener = clientWifiListener;
-    }
-
     public void setServerWifiListener(OnServerWifiListener serverWifiListener) {
         mServerWifiListener = serverWifiListener;
     }
 
-    public WifiController(Context context, WifiManager wifiManager, boolean isClient) {
+    public WifiController(Context context, WifiManager wifiManager) {
         mContext = context;
         mWifiManager = wifiManager;
-        this.isClient = isClient;
     }
 
     public void connectWifi(WifiMessage wifiMessage) {
@@ -124,26 +115,14 @@ public class WifiController {
                     NetworkInfo.State state = info.getState();
                     if (state == NetworkInfo.State.DISCONNECTED) {
                         Log.v("WifiController", "Wifi断开，尝试连接");
-                        if (isClient) {
-                            mClientWifiListener.OnClientDisConnect();
-                        } else {
-                            mServerWifiListener.OnServerDisConnect();
-                        }
+                        mServerWifiListener.OnServerDisConnect();
                     } else if (state == NetworkInfo.State.CONNECTED) {
                         WifiInfo wifiInfo = mWifiManager.getConnectionInfo();
                         Log.v("WifiController", "成功连接" + wifiInfo.getSSID());
-                        if (isClient) {
-                            mClientWifiListener.OnClientConnected(wifiInfo, mWifiMessage);
-                        } else {
-                            mServerWifiListener.OnServerConnected(wifiInfo, mWifiMessage);
-                        }
+                        mServerWifiListener.OnServerConnected(wifiInfo, mWifiMessage);
                     } else if (state == NetworkInfo.State.CONNECTING) {
                         Log.v("WifiController", "正在连接。。。");
-                        if (isClient) {
-                            mClientWifiListener.OnClientConnecting();
-                        } else {
-                            mServerWifiListener.OnServerConnecting();
-                        }
+                        mServerWifiListener.OnServerConnecting();
                     }
                 }
             }
