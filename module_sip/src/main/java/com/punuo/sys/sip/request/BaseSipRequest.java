@@ -6,7 +6,7 @@ import android.util.Log;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.punuo.sys.sdk.httplib.JsonUtil;
-import com.punuo.sys.sip.SipConfig;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.SipMessageProcessor;
 import com.punuo.sys.sip.message.SipMessageFactory;
 

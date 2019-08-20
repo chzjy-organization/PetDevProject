@@ -8,8 +8,8 @@ import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.IHttpConfig;
 import com.punuo.sys.sdk.util.DebugCrashHandler;
 import com.punuo.sys.sdk.util.DeviceHelper;
-import com.punuo.sys.sip.ISipConfig;
-import com.punuo.sys.sip.SipConfig;
+import com.punuo.sys.sip.config.ISipConfig;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.thread.SipInitThread;
 
@@ -59,7 +59,6 @@ public class ProcessTasks {
         HttpManager.init();
         SipConfig.init(new ISipConfig() {
             NameAddress mServerAddress;
-            NameAddress mDevRegisterAddress;
             NameAddress mDevNormalAddress;
             @Override
             public String getServerIp() {
@@ -72,6 +71,11 @@ public class ProcessTasks {
             }
 
             @Override
+            public String getDevId() {
+                return "310023001139940001";
+            }
+
+            @Override
             public NameAddress getServerAddress() {
                 if (mServerAddress == null) {
                     SipURL remote = new SipURL(SipConfig.SERVER_ID, SipConfig.getServerIp(), SipConfig.getPort());
@@ -81,19 +85,10 @@ public class ProcessTasks {
             }
 
             @Override
-            public NameAddress getDevRegisterAddress() {
-                if (mDevRegisterAddress == null) {
-                    SipURL local = new SipURL("321000000200150001", SipConfig.getServerIp(), SipConfig.getPort());
-                    mDevRegisterAddress = new NameAddress("321000000200150001", local);
-                }
-                return mDevRegisterAddress;
-            }
-
-            @Override
             public NameAddress getDevNormalAddress() {
                 if (mDevNormalAddress == null) {
-                    SipURL local = new SipURL("321000000200150001", SipConfig.getServerIp(), SipConfig.getPort());
-                    mDevNormalAddress = new NameAddress("321000000200150001", local);
+                    SipURL local = new SipURL(getDevId(), SipConfig.getServerIp(), SipConfig.getPort());
+                    mDevNormalAddress = new NameAddress(getDevId(), local);
                 }
                 return mDevNormalAddress;
             }

@@ -5,6 +5,11 @@ android {
     defaultConfig {
         minSdkVersion gradle.sdk.minSdkVersion
         targetSdkVersion gradle.sdk.targetSdkVersion
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
     }
 
     sourceSets {
@@ -25,4 +30,5 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':basesdk')
+    annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
 }

@@ -1,4 +1,4 @@
-package com.punuo.sys.sip;
+package com.punuo.sys.sip.config;
 
 import org.zoolu.sip.address.NameAddress;
 
@@ -38,12 +38,11 @@ public class SipConfig {
         return port;
     }
 
-    public static NameAddress getDevRegisterAddress() {
+    public static String getDevId() {
         if (sSipConfig != null) {
-            return sSipConfig.getDevRegisterAddress();
-        } else {
-            throw new RuntimeException("RegisterNameAddress is null, please set RegisterNameAddress");
+            return sSipConfig.getDevId();
         }
+        return "";
     }
 
     public static NameAddress getServerAddress() {

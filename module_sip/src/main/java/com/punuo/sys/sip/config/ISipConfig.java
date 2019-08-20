@@ -1,4 +1,4 @@
-package com.punuo.sys.sip;
+package com.punuo.sys.sip.config;
 
 import org.zoolu.sip.address.NameAddress;
 
@@ -12,9 +12,9 @@ public interface ISipConfig {
 
     int getPort();
 
-    NameAddress getServerAddress();
+    String getDevId();
 
-    NameAddress getDevRegisterAddress();
+    NameAddress getServerAddress();
 
     NameAddress getDevNormalAddress();
 }
