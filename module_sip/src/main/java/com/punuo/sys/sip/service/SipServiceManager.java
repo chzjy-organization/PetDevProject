@@ -5,6 +5,7 @@ import android.os.Message;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.punuo.sys.sdk.util.BaseHandler;
 
 /**
@@ -30,14 +31,15 @@ public class SipServiceManager implements BaseHandler.MessageHandler {
         mBaseHandler = new BaseHandler(this);
     }
 
-    public void handleRequest(String key, JsonElement jsonElement) {
+    public void handleRequest(String key, String jsonStr, org.zoolu.sip.message.Message msg) {
         //回调到主线程
         Message message = new Message();
         message.what = MSG_HANDLER;
         Bundle bundle = new Bundle();
         bundle.putString("key", key);
+        bundle.getString("jsonStr", jsonStr);
         message.setData(bundle);
-        message.obj = jsonElement;
+        message.obj = msg;
         mBaseHandler.sendMessage(message);
 
     }
@@ -47,10 +49,12 @@ public class SipServiceManager implements BaseHandler.MessageHandler {
         try {
             Bundle bundle = msg.getData();
             String key = bundle.getString("key");
+            String jsonStr = bundle.getString("jsonStr","{}");
+            JsonElement jsonElement = new JsonParser().parse(jsonStr);
             SipRequestService service = (SipRequestService) ARouter.getInstance()
                     .build("/sip/" + key).navigation();
             if (service != null) {
-                service.handleRequest((JsonElement) msg.obj);
+                service.handleRequest((org.zoolu.sip.message.Message) msg.obj, jsonElement);
             }
         } catch (Exception e) {
             e.printStackTrace();

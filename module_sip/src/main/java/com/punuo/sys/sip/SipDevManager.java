@@ -116,7 +116,7 @@ public class SipDevManager extends SipProvider {
             handleResponseMessage(sipRequest, msg);
             mRequestMap.remove(id);
         } else {
-            handleResponse(msg);
+            handleRequest(msg);
         }
     }
 
@@ -135,7 +135,7 @@ public class SipDevManager extends SipProvider {
         }
     }
 
-    private void handleResponse(Message message) {
+    private void handleRequest(Message message) {
         String body = message.getBody();
         if (!TextUtils.isEmpty(body)) {
             XmlToJson xmlToJson = new XmlToJson.Builder(body).build();
@@ -144,14 +144,14 @@ public class SipDevManager extends SipProvider {
             JsonElement data = null;
             try {
                 data = new JsonParser().parse(parse);
-                handle(data);
+                handle(message, data);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void handle(JsonElement data) {
+    private void handle(Message message, JsonElement data) {
         if (data == null) {
             return;
         }
@@ -161,7 +161,7 @@ public class SipDevManager extends SipProvider {
             Iterator iterator = entrySet.iterator();
             if (iterator.hasNext()) {
                 Map.Entry<String, JsonElement> next = (Map.Entry<String, JsonElement>) iterator.next();
-                SipServiceManager.getInstance().handleRequest(next.getKey(), next.getValue());
+                SipServiceManager.getInstance().handleRequest(next.getKey(), next.getValue().getAsString(), message);
             }
         }
     }
