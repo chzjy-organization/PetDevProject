@@ -8,4 +8,6 @@ public class ServicePath {
 
     public static final String PATH_DIRECTION_CONTROL = "/sip/direction_control";
     public static final String PATH_QUERY = "/sip/query";
+    public static final String PATH_MEDIA = "/sip/media";
+    public static final String PATH_RECVADDR = "/sip/recvaddr";
 }

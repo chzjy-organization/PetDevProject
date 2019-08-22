@@ -51,7 +51,7 @@ public class SipServiceManager implements BaseHandler.MessageHandler {
             String key = bundle.getString("key");
             String jsonStr = bundle.getString("jsonStr","{}");
             JsonElement jsonElement = new JsonParser().parse(jsonStr);
-            SipRequestService service = (SipRequestService) ARouter.getInstance()
+            NormalRequestService service = (NormalRequestService) ARouter.getInstance()
                     .build("/sip/" + key).navigation();
             if (service != null) {
                 service.handleRequest((org.zoolu.sip.message.Message) msg.obj, jsonElement);

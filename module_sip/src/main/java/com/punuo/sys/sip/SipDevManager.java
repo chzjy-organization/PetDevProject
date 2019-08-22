@@ -161,7 +161,7 @@ public class SipDevManager extends SipProvider {
             Iterator iterator = entrySet.iterator();
             if (iterator.hasNext()) {
                 Map.Entry<String, JsonElement> next = (Map.Entry<String, JsonElement>) iterator.next();
-                SipServiceManager.getInstance().handleRequest(next.getKey(), next.getValue().getAsString(), message);
+                SipServiceManager.getInstance().handleRequest(next.getKey(), next.getValue().toString(), message);
             }
         }
     }
