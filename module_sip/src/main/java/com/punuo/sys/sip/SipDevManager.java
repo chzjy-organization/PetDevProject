@@ -74,7 +74,7 @@ public class SipDevManager extends SipProvider {
             return;
         }
         Message message = sipRequest.build();
-        if (message != null) {
+        if (message != null && sipRequest.hasResponse()) {
             TransportConnId id = sendMessage(message);
             mRequestMap.put(id, sipRequest);
         } else {

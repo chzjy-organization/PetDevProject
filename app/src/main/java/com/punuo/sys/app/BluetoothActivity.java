@@ -2,16 +2,15 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
@@ -47,6 +46,7 @@ public class BluetoothActivity extends BaseActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
+    private boolean isFirst = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,8 @@ public class BluetoothActivity extends BaseActivity {
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Settings.ACTION_SETTINGS));
+//                startActivity(new Intent(Settings.ACTION_SETTINGS));
+                ARouter.getInstance().build("/sip/video_preview").navigation();
             }
         });
         EventBus.getDefault().register(this);
@@ -231,17 +232,20 @@ public class BluetoothActivity extends BaseActivity {
         SipDevManager.getInstance().addRequest(registerRequest);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        init();
-        registerDev();
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(ReRegisterEvent event) {
         mBaseHandler.removeMessages(MSG_HEART_BEAR_VALUE);
         registerDev();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isFirst) {
+            init();
+            registerDev();
+            isFirst = false;
+        }
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.punuo.sys.sip.service;
 
+import android.util.Log;
+
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 
@@ -24,7 +26,7 @@ public class QueryService extends NormalRequestService {
             value.put("variable", "MediaInfo_Video");
             value.put("result", 0);
             value.put("video", "H.264");
-            value.put("resolution", "MOBILE_S6");
+            value.put("resolution", "Feed_Device");
             value.put("framerate", 25);
             value.put("bitrate", 256);
             value.put("bright", 51);
@@ -40,6 +42,7 @@ public class QueryService extends NormalRequestService {
 
     @Override
     protected void onSuccess(Message msg, Object result) {
+        Log.d("han.chen", "Query 收到视频请求");
         onResponse(msg);
     }
 

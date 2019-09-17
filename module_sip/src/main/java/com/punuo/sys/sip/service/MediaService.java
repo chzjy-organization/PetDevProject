@@ -3,8 +3,10 @@ package com.punuo.sys.sip.service;
 import android.util.Log;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.MediaData;
+import com.punuo.sys.sip.video.VideoInfoManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +26,7 @@ public class MediaService extends NormalRequestService<MediaData> {
         JSONObject body = new JSONObject();
         JSONObject value = new JSONObject();
         try {
-            value.put("resolution", "MOBILE_S9");
+            value.put("resolution", "Feed_Device");
             value.put("video", "H.264");
             value.put("audio", "G.711");
             value.put("kbps", 800);
@@ -42,9 +44,14 @@ public class MediaService extends NormalRequestService<MediaData> {
 
     @Override
     protected void onSuccess(Message msg, MediaData result) {
-        Log.d("han.chen", "收到视频请求");
-        onResponse(msg);
-        //TODO 编码采集视频发送
+        Log.d("han.chen", "Media 收到视频请求");
+        if (result != null) {
+            onResponse(msg);
+            VideoInfoManager.initMediaData(result);
+            VideoInfoManager.getInstance().reset();
+            ARouter.getInstance().build("/sip/video_preview")
+                    .navigation();
+        }
     }
 
     @Override

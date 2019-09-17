@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.jakewharton.butterknife'
 
 android {
     compileSdkVersion gradle.sdk.compileSdkVersion
@@ -31,4 +32,5 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':basesdk')
     annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
 }

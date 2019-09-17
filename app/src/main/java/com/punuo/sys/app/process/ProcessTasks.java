@@ -16,8 +16,6 @@ import com.punuo.sys.sip.thread.SipInitThread;
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.address.SipURL;
 
-import android_serialport_api.SerialPortManager;
-
 /**
  * Created by han.chen.
  * Date on 2019-06-15.
@@ -95,6 +93,5 @@ public class ProcessTasks {
         });
         SipDevManager.setContext(app);
         new SipInitThread().start();
-        SerialPortManager.getInstance().initSerialPort();
     }
 }
