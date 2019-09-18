@@ -12,8 +12,8 @@ public class CameraBuffer {
     private byte[] frame;
 
     public CameraBuffer() {
-        this.frame = new byte[(VideoInfoManager.width
-                * VideoInfoManager.height * 3) / 2];
+        this.frame = new byte[(H264Config.VIDEO_WIDTH
+                * H264Config.VIDEO_HEIGHT * 3) / 2];
     }
 
     /**

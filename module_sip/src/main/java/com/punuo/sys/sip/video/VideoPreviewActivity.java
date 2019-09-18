@@ -51,7 +51,7 @@ public class VideoPreviewActivity extends BaseActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         mCameraBuffer = new CameraBuffer();
-        NativeH264Encoder.InitEncoder(VideoInfoManager.width, VideoInfoManager.height, VideoInfoManager.frameRate);
+        NativeH264Encoder.InitEncoder(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
 
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderCallback);
@@ -60,7 +60,7 @@ public class VideoPreviewActivity extends BaseActivity {
 
     private void initSurfaceViewSize() {
         int width = CommonUtil.getWidth();
-        int height = VideoInfoManager.width * width / VideoInfoManager.height; //旋转90度宽高旋转了
+        int height = H264Config.VIDEO_WIDTH * width / H264Config.VIDEO_HEIGHT; //旋转90度宽高旋转了
         mSurfaceView.getLayoutParams().height = height;
     }
 
@@ -117,9 +117,9 @@ public class VideoPreviewActivity extends BaseActivity {
             return;
         }
         Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewFpsRange(VideoInfoManager.frameRate, VideoInfoManager.frameRate);
+        parameters.setPreviewFpsRange(H264Config.FRAME_RATE, H264Config.FRAME_RATE);
         parameters.setPictureFormat(ImageFormat.YV12);
-        parameters.setPreviewSize(VideoInfoManager.width, VideoInfoManager.height);
+        parameters.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
         parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         camera.setParameters(parameters);
     }
@@ -180,7 +180,7 @@ public class VideoPreviewActivity extends BaseActivity {
                 return;
             }
 
-            int timeToSleep = 1000 / VideoInfoManager.frameRate;
+            int timeToSleep = 1000 / H264Config.FRAME_RATE;
             byte[] frameData;
             byte[] encodeResult;
             long encoderTs = 0;
@@ -194,7 +194,7 @@ public class VideoPreviewActivity extends BaseActivity {
                 if (encodeState == 0 && encodeResult.length > 0) {
                     //TODO 编码成功分包发送
                     Log.d(TAG, "编码成功");
-//                VideoInfoManager.getInstance().divideAndSendNal(encodeResult);
+//                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
                 }
                 // Sleep between frames if necessary
                 long delta = System.currentTimeMillis() - time;

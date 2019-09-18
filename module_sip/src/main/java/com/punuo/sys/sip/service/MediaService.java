@@ -6,7 +6,8 @@ import com.alibaba.android.arouter.facade.annotation.Route;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.MediaData;
-import com.punuo.sys.sip.video.VideoInfoManager;
+import com.punuo.sys.sip.video.H264Config;
+import com.punuo.sys.sip.video.MediaRtpSender;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +34,7 @@ public class MediaService extends NormalRequestService<MediaData> {
             value.put("self", "192.168.1.129 UDP 5000");
             value.put("mode", "active");
             value.put("magic", "01234567890123456789012345678901");
-            value.put("dev_type", 2);
+            value.put("dev_type", H264Config.VIDEO_TYPE);
             body.put("media", value);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -47,8 +48,8 @@ public class MediaService extends NormalRequestService<MediaData> {
         Log.d("han.chen", "Media 收到视频请求");
         if (result != null) {
             onResponse(msg);
-            VideoInfoManager.initMediaData(result);
-            VideoInfoManager.getInstance().reset();
+            MediaRtpSender.getInstance().initMediaData(result);
+            MediaRtpSender.getInstance().init();
             ARouter.getInstance().build("/sip/video_preview")
                     .navigation();
         }

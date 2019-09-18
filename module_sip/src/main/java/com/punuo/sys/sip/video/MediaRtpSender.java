@@ -12,16 +12,11 @@ import jlibrtp.RTPSession;
  * Created by han.chen.
  * Date on 2019-08-22.
  **/
-public class VideoInfoManager {
-    public static int width = 320;
-    public static int height = 240;
-    public static int videoType = 2;
-    public static int frameRate = 10;
-    public static String rtpIp; //目标ip
-    public static int rtpPort; //目标port
-    public static byte[] magic;
-    public static long sVoiceSrc; //音频同步源
-    public static long sVideoSrc; //视频同步源
+public class MediaRtpSender {
+    private String rtpIp; //目标ip
+    private int rtpPort; //目标port
+    private long voicesSrc; //音频同步源
+    private long videosSrc; //视频同步源
     private DatagramSocket rtpSocket;
     private DatagramSocket rtcpSocket;
     private RTPSession rtpVideoSession;
@@ -29,38 +24,38 @@ public class VideoInfoManager {
     /**
      * 每一个新的NAL设置首包打包状态为false，即没有打包首包
      */
-    public static boolean firstPktReceived = false;
+    private boolean firstPktReceived = false;
     /**
      * 记录打包分片的索引
      */
-    public static int pktflag = 0;
+    private int pktFlag = 0;
     /**
      * 若未打包到末包，则此状态一直为true
      */
-    public static boolean status = true;
+    private boolean status = true;
     /**
      * 打包分片长度
      */
-    public static int divideLength = 1000;
+    private int divideLength = 1000;
     /**
      * 分片标志位
      */
-    public static boolean dividingFrame = false;
+    private boolean dividingFrame = false;
 
-    private static VideoInfoManager videoInfoManager;
+    private static MediaRtpSender mediaRtpSender;
 
-    public static VideoInfoManager getInstance() {
-        if (videoInfoManager == null) {
-            synchronized (VideoInfoManager.class) {
-                if (videoInfoManager == null) {
-                    videoInfoManager = new VideoInfoManager();
+    public static MediaRtpSender getInstance() {
+        if (mediaRtpSender == null) {
+            synchronized (MediaRtpSender.class) {
+                if (mediaRtpSender == null) {
+                    mediaRtpSender = new MediaRtpSender();
                 }
             }
         }
-        return videoInfoManager;
+        return mediaRtpSender;
     }
 
-    public void reset() {
+    public void init() {
         try {
             rtpSocket = new DatagramSocket();
             rtcpSocket = new DatagramSocket();
@@ -71,35 +66,35 @@ public class VideoInfoManager {
 
         rtpVideoSession = new RTPSession(rtpSocket, rtcpSocket);
         rtpVideoSession.addParticipant(participant);
-        rtpVideoSession.setSsrc(sVideoSrc);
+        rtpVideoSession.setSsrc(videosSrc);
         //设置RTP包的负载类型为0x62
         rtpVideoSession.payloadType(0x62);
 
         rtpVoiceSession = new RTPSession(rtpSocket, rtcpSocket);
         rtpVoiceSession.addParticipant(participant);
-        rtpVoiceSession.setSsrc(sVoiceSrc);
+        rtpVoiceSession.setSsrc(voicesSrc);
 
     }
 
-    public static void initMediaData(MediaData mediaData) {
+    public void initMediaData(MediaData mediaData) {
         if (mediaData == null) {
             return;
         }
         rtpIp = mediaData.getIp();
         rtpPort = mediaData.getPort();
-        magic = mediaData.getMagic();
-        sVoiceSrc = generateVoiceSsrc(magic);
-        sVideoSrc = generateVideoSsrc(magic);
+        byte[] magic = mediaData.getMagic();
+        voicesSrc = generateVoiceSsrc(magic);
+        videosSrc = generateVideoSsrc(magic);
     }
 
-    private static long generateVoiceSsrc(byte[] magic) {
+    private long generateVoiceSsrc(byte[] magic) {
         return (magic[15] & 0x000000ff)
                 | ((magic[14] << 8) & 0x0000ff00)
                 | ((magic[13] << 16) & 0x00ff0000)
                 | ((magic[12] << 24) & 0xff000000);
     }
 
-    private static long generateVideoSsrc(byte[] magic) {
+    private long generateVideoSsrc(byte[] magic) {
         byte[] videoMagic = new byte[20];
         videoMagic[0] = 0x00;
         videoMagic[1] = 0x01;
@@ -122,14 +117,14 @@ public class VideoInfoManager {
                 dividingFrame = true;
                 status = true;
                 firstPktReceived = false;
-                pktflag = 0;
+                pktFlag = 0;
 
                 while (status) {
                     if (!firstPktReceived) {
                         //首包
                         sendFirstPacket(encodeResult);
                     } else {
-                        if (encodeResult.length - pktflag > divideLength) {
+                        if (encodeResult.length - pktFlag > divideLength) {
                             //中包
                             sendMiddlePacket(encodeResult);
                         } else {
@@ -153,7 +148,7 @@ public class VideoInfoManager {
     /**
      * 发送首包
      */
-    public void sendFirstPacket(byte[] encodeResult) {
+    private void sendFirstPacket(byte[] encodeResult) {
         rtppkt[0] = (byte) (encodeResult[4] & 0xe0);
         rtppkt[0] = (byte) (rtppkt[4] + 0x1c);
         rtppkt[1] = (byte) (0x80 + (encodeResult[4] & 0x1f));
@@ -162,7 +157,7 @@ public class VideoInfoManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        pktflag = pktflag + divideLength;
+        pktFlag = pktFlag + divideLength;
         firstPktReceived = true;
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
@@ -176,11 +171,11 @@ public class VideoInfoManager {
         rtppkt[0] = (byte) (rtppkt[0] + 0x1c); //加上Fu-A的type值28（0x1c）即组成FU indicator
         rtppkt[1] = (byte) ((encodeResult[0] & 0x1f)); //中包的ser为000加上Nalu的type组成 FU header
         try {
-            System.arraycopy(encodeResult, pktflag, rtppkt, 2, divideLength);
+            System.arraycopy(encodeResult, pktFlag, rtppkt, 2, divideLength);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        pktflag = pktflag + divideLength;
+        pktFlag = pktFlag + divideLength;
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
     }
@@ -189,12 +184,12 @@ public class VideoInfoManager {
      * 发送末包
      */
     private void sendLastPacket(byte[] encodeResult) {
-        byte[] rtppktLast = new byte[encodeResult.length - pktflag + 2];
+        byte[] rtppktLast = new byte[encodeResult.length - pktFlag + 2];
         rtppktLast[0] = (byte) (encodeResult[0] & 0xe0);
         rtppktLast[0] = (byte) (rtppktLast[0] + 0x1c);
         rtppktLast[1] = (byte) (0x40 + (encodeResult[0] & 0x1f));
         try {
-            System.arraycopy(encodeResult, pktflag, rtppktLast, 2, encodeResult.length - pktflag);
+            System.arraycopy(encodeResult, pktFlag, rtppktLast, 2, encodeResult.length - pktFlag);
         } catch (Exception e) {
             e.printStackTrace();
         }
