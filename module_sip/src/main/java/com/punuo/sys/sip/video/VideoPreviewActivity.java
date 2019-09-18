@@ -4,16 +4,18 @@ import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
 import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
+
+import org.opencore.avch264.NativeH264Encoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,13 +26,15 @@ import butterknife.ButterKnife;
  **/
 @Route(path = "/sip/video_preview")
 public class VideoPreviewActivity extends BaseActivity {
+    private String TAG = "VideoPreviewActivity";
 
     @BindView(R2.id.surface_view)
     SurfaceView mSurfaceView;
 
     private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
-    private long time;
+    private CameraBuffer mCameraBuffer;
+    private VideoEncodeThread mVideoEncodeThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +50,11 @@ public class VideoPreviewActivity extends BaseActivity {
     private void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+        mCameraBuffer = new CameraBuffer();
+        NativeH264Encoder.InitEncoder(VideoInfoManager.width, VideoInfoManager.height, VideoInfoManager.frameRate);
+
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderCallback);
-        NativeH264Encoder.InitEncoder(VideoInfoManager.width, VideoInfoManager.height, VideoInfoManager.frameRate);
 
     }
 
@@ -66,14 +72,9 @@ public class VideoPreviewActivity extends BaseActivity {
 
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-//            int numCamera = Camera.getNumberOfCameras();
-//            Camera.CameraInfo info = new Camera.CameraInfo();
-//            for (int i = 0; i < numCamera; i++) {
-//                Camera.getCameraInfo(i, info);
-//            }
             resetCamera();
             initCamera();
-            time = System.currentTimeMillis();
+            startEncoding();
         }
 
         @Override
@@ -96,6 +97,7 @@ public class VideoPreviewActivity extends BaseActivity {
             return;
         }
         try {
+            //TODO 打开外接摄像头
             mCamera = Camera.open();
             if (mCamera == null) {
                 return;
@@ -125,15 +127,29 @@ public class VideoPreviewActivity extends BaseActivity {
     private Camera.PreviewCallback mPreviewCallback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            //此处是在主线线程
-            byte[] encodeResult = NativeH264Encoder.EncodeFrame(data, time);
-            time += 1000 / VideoInfoManager.frameRate;
-            int encodeState = NativeH264Encoder.getLastEncodeStatus();
-            if (encodeState == 0 && encodeResult.length > 0) {
-                //编码成功分包发送
+            if (mCameraBuffer != null) {
+                mCameraBuffer.setFrame(data);
             }
         }
     };
+
+    private void startEncoding() {
+        started = true;
+        mVideoEncodeThread = new VideoEncodeThread();
+        mVideoEncodeThread.start();
+    }
+
+    private void stopEncoding() {
+        started = false;
+        try {
+            if (mVideoEncodeThread != null) {
+                mVideoEncodeThread.interrupt();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mVideoEncodeThread = null;
+    }
 
     @Override
     protected void onPause() {
@@ -145,12 +161,51 @@ public class VideoPreviewActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         initCamera();
-        time = System.currentTimeMillis();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopEncoding();
         NativeH264Encoder.DeinitEncoder();
+    }
+
+    private boolean started = false;
+
+    public class VideoEncodeThread extends Thread {
+        private String TAG = "VideoEncodeThread";
+        @Override
+        public void run() {
+            if (mCameraBuffer == null) {
+                return;
+            }
+
+            int timeToSleep = 1000 / VideoInfoManager.frameRate;
+            byte[] frameData;
+            byte[] encodeResult;
+            long encoderTs = 0;
+            long oldTs = System.currentTimeMillis();
+            while (started) {
+                long time = System.currentTimeMillis();
+                encoderTs = encoderTs + (time - oldTs);
+                frameData = mCameraBuffer.getFrame();
+                encodeResult = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
+                int encodeState = NativeH264Encoder.getLastEncodeStatus();
+                if (encodeState == 0 && encodeResult.length > 0) {
+                    //TODO 编码成功分包发送
+                    Log.d(TAG, "编码成功");
+//                VideoInfoManager.getInstance().divideAndSendNal(encodeResult);
+                }
+                // Sleep between frames if necessary
+                long delta = System.currentTimeMillis() - time;
+                if (delta < timeToSleep) {
+                    try {
+                        Thread.sleep((timeToSleep - delta) - (((timeToSleep - delta) * 10) / 100));
+                    } catch (InterruptedException e) {
+                    }
+                }
+                oldTs = time;
+            }
+        }
     }
 }

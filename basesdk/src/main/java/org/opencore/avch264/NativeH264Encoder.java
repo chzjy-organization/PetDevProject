@@ -1,7 +1,8 @@
+package org.opencore.avch264;
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright (C) 2010 France Telecom S.A.
+ * Copyright © 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +17,10 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder;
-
 
 public class NativeH264Encoder {
 
-    public NativeH264Encoder() {
+    public NativeH264Encoder(){
     }
 
     public static native int InitEncoder(int i, int j, int k);
@@ -30,13 +29,21 @@ public class NativeH264Encoder {
 
     public static native int DeinitEncoder();
 
+    //encode success or fail
     public static native int getLastEncodeStatus();
 
+    //if keyframe return 0x64
+    // if p frame return 0x66
+    // or return -1;
+    public static native int getKeyFrame();
+
     static {
-        String libname = "Encoder";
-        try {
+        String libname = "H264Encoder";
+        try{
             System.loadLibrary(libname);
-        } catch (UnsatisfiedLinkError unsatisfiedlinkerror) {
+        }
+        catch(UnsatisfiedLinkError unsatisfiedlinkerror) {
+
         }
     }
 }
