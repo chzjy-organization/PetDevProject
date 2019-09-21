@@ -37,7 +37,7 @@ public class SipServiceManager implements BaseHandler.MessageHandler {
         message.what = MSG_HANDLER;
         Bundle bundle = new Bundle();
         bundle.putString("key", key);
-        bundle.getString("jsonStr", jsonStr);
+        bundle.putString("jsonStr", jsonStr);
         message.setData(bundle);
         message.obj = msg;
         mBaseHandler.sendMessage(message);

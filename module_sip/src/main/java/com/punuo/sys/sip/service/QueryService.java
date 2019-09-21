@@ -16,7 +16,7 @@ import fr.arnaudguyon.xmltojsonlib.JsonToXml;
  * Date on 2019-08-20.
  **/
 @Route(path = ServicePath.PATH_QUERY)
-public class QueryService extends NormalRequestService {
+public class QueryService extends NormalRequestService<String> {
 
     @Override
     protected String getBody() {
@@ -41,7 +41,7 @@ public class QueryService extends NormalRequestService {
     }
 
     @Override
-    protected void onSuccess(Message msg, Object result) {
+    protected void onSuccess(Message msg, String result) {
         Log.d("han.chen", "Query 收到视频请求");
         onResponse(msg);
     }

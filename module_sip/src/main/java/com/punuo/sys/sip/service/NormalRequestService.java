@@ -23,7 +23,7 @@ public abstract class NormalRequestService<T> implements SipRequestService {
     @Override
     public void handleRequest(Message msg, JsonElement jsonElement) {
         try {
-            T result = jsonParse(jsonElement, jsonElement.getAsString());
+            T result = jsonParse(jsonElement, jsonElement.getAsJsonObject().toString());
             onSuccess(msg, result);
         } catch (Exception e) {
             e.printStackTrace();

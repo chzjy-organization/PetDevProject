@@ -78,8 +78,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         mCameraButton.setOnClickListener(mOnClickListener);
 
         mUVCCameraView = (SurfaceView) findViewById(R.id.camera_surface_view);
-        mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
         initSurfaceViewSize();
+        mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
 
         startEncoding();
     }
