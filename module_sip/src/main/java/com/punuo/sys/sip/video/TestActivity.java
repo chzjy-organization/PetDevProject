@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
+import com.punuo.sys.sip.model.RecvaddrData;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.IFrameCallback;
@@ -46,6 +47,8 @@ import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
 import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
 
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.opencore.avch264.NativeH264Encoder;
 
 import java.nio.ByteBuffer;
@@ -359,5 +362,10 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 oldTs = time;
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(RecvaddrData event) {
+       finish();
     }
 }

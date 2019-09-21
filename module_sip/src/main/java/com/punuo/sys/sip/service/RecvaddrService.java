@@ -4,6 +4,7 @@ import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.RecvaddrData;
 
+import org.greenrobot.eventbus.EventBus;
 import org.zoolu.sip.message.Message;
 
 /**
@@ -21,6 +22,7 @@ public class RecvaddrService extends NormalRequestService<RecvaddrData> {
     protected void onSuccess(Message msg, RecvaddrData result) {
         onResponse(msg);
         //TODO 关闭视频
+        EventBus.getDefault().post(result);
     }
 
     @Override
