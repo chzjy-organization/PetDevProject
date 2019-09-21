@@ -33,4 +33,5 @@ dependencies {
     implementation project(':basesdk')
     annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
     annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
+    implementation project(':libuvccamera')
 }

@@ -6,5 +6,9 @@
             android:name=".video.VideoPreviewActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Pn.Translucent" />
+        <activity
+            android:name=".video.TestActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Pn.Translucent" />
     </application>
 </manifest>
