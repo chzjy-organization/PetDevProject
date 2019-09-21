@@ -70,13 +70,14 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 
 		mUVCCameraView = (SurfaceView)findViewById(R.id.camera_surface_view);
 		mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
+		initSurfaceViewSize();
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
 	}
 
 	private void initSurfaceViewSize() {
 		int width = CommonUtil.getWidth();
-		int height = H264Config.VIDEO_WIDTH * width / H264Config.VIDEO_HEIGHT; //旋转90度宽高旋转了
+		int height = H264Config.VIDEO_HEIGHT * width / H264Config.VIDEO_WIDTH;
 		mUVCCameraView.getLayoutParams().height = height;
 	}
 
