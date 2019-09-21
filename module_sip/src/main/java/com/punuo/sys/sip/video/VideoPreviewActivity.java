@@ -9,10 +9,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
+import com.serenegiant.common.BaseActivity;
 
 import org.opencore.avch264.NativeH264Encoder;
 

@@ -35,6 +35,7 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
+import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
@@ -42,6 +43,9 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
 import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
+
+import java.util.List;
+
 @Route(path = "/sip/video_preview")
 public class TestActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
 	private static final boolean DEBUG = true;	// TODO set false when production
@@ -68,6 +72,12 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 		mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
+	}
+
+	private void initSurfaceViewSize() {
+		int width = CommonUtil.getWidth();
+		int height = H264Config.VIDEO_WIDTH * width / H264Config.VIDEO_HEIGHT; //旋转90度宽高旋转了
+		mUVCCameraView.getLayoutParams().height = height;
 	}
 
 	@Override
@@ -132,6 +142,11 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 		public void onAttach(final UsbDevice device) {
 			if (DEBUG) Log.v(TAG, "onAttach:");
 			Toast.makeText(TestActivity.this, "USB_DEVICE_ATTACHED", Toast.LENGTH_SHORT).show();
+			List<UsbDevice> deviceList = mUSBMonitor.getDeviceList();
+			if (!deviceList.isEmpty()) {
+				UsbDevice usbDevice = deviceList.get(0);
+				mUSBMonitor.requestPermission(usbDevice);
+			}
 		}
 
 		@Override
@@ -151,11 +166,11 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 						camera.open(ctrlBlock);
 						if (DEBUG) Log.i(TAG, "supportedSize:" + camera.getSupportedSize());
 						try {
-							camera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
+							camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
 						} catch (final IllegalArgumentException e) {
 							try {
 								// fallback to YUV mode
-								camera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+								camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
 							} catch (final IllegalArgumentException e1) {
 								camera.destroy();
 								return;

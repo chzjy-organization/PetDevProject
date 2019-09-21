@@ -29,7 +29,8 @@
     <SurfaceView
         android:id="@+id/camera_surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
 
     <ImageButton
         android:id="@+id/camera_button"
