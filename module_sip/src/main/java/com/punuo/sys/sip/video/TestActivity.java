@@ -25,6 +25,7 @@ package com.punuo.sys.sip.video;
 
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -70,6 +71,9 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sip_activity_main);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        MediaRtpSender.getInstance().init();
         mCameraBuffer = new CameraBuffer();
         NativeH264Encoder.InitEncoder(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
 

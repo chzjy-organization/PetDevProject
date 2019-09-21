@@ -13,10 +13,10 @@ import jlibrtp.RTPSession;
  * Date on 2019-08-22.
  **/
 public class MediaRtpSender {
-    private String rtpIp; //目标ip
-    private int rtpPort; //目标port
-    private long voicesSrc; //音频同步源
-    private long videosSrc; //视频同步源
+    private static String rtpIp; //目标ip
+    private static int rtpPort; //目标port
+    private static long voicesSrc; //音频同步源
+    private static long videosSrc; //视频同步源
     private DatagramSocket rtpSocket;
     private DatagramSocket rtcpSocket;
     private RTPSession rtpVideoSession;
@@ -76,7 +76,7 @@ public class MediaRtpSender {
 
     }
 
-    public void initMediaData(MediaData mediaData) {
+    public static void initMediaData(MediaData mediaData) {
         if (mediaData == null) {
             return;
         }
@@ -87,14 +87,14 @@ public class MediaRtpSender {
         videosSrc = generateVideoSsrc(magic);
     }
 
-    private long generateVoiceSsrc(byte[] magic) {
+    private static long generateVoiceSsrc(byte[] magic) {
         return (magic[15] & 0x000000ff)
                 | ((magic[14] << 8) & 0x0000ff00)
                 | ((magic[13] << 16) & 0x00ff0000)
                 | ((magic[12] << 24) & 0xff000000);
     }
 
-    private long generateVideoSsrc(byte[] magic) {
+    private static long generateVideoSsrc(byte[] magic) {
         byte[] videoMagic = new byte[20];
         videoMagic[0] = 0x00;
         videoMagic[1] = 0x01;

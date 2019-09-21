@@ -48,8 +48,7 @@ public class MediaService extends NormalRequestService<MediaData> {
         Log.d("han.chen", "Media 收到视频请求");
         if (result != null) {
             onResponse(msg);
-            MediaRtpSender.getInstance().initMediaData(result);
-            MediaRtpSender.getInstance().init();
+            MediaRtpSender.initMediaData(result);
             ARouter.getInstance().build("/sip/video_preview")
                     .navigation();
         }
