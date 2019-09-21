@@ -71,6 +71,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sip_activity_main);
         mCameraBuffer = new CameraBuffer();
+        NativeH264Encoder.InitEncoder(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
 
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mCameraButton = (ImageButton) findViewById(R.id.camera_button);
@@ -128,6 +129,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView = null;
         mCameraButton = null;
         stopEncoding();
+        NativeH264Encoder.DeinitEncoder();
         super.onDestroy();
     }
 
