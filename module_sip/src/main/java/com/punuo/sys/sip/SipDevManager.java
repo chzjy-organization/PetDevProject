@@ -9,12 +9,10 @@ import android.util.Log;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import com.punuo.sys.sip.request.BaseSipRequest;
 import com.punuo.sys.sdk.httplib.ErrorTipException;
-import com.punuo.sys.sdk.httplib.JsonUtil;
-import com.punuo.sys.sip.model.ControlData;
-import com.punuo.sys.sip.model.ResponseMap;
+import com.punuo.sys.sip.config.SipConfig;
+import com.punuo.sys.sip.request.BaseSipRequest;
+import com.punuo.sys.sip.service.SipServiceManager;
 
 import org.zoolu.sip.message.BaseSipResponses;
 import org.zoolu.sip.message.Message;
@@ -23,13 +21,15 @@ import org.zoolu.sip.provider.Transport;
 import org.zoolu.sip.provider.TransportConnId;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import android_serialport_api.SerialPortManager;
 import fr.arnaudguyon.xmltojsonlib.XmlToJson;
 
 /**
@@ -76,7 +76,9 @@ public class SipDevManager extends SipProvider {
         Message message = sipRequest.build();
         if (message != null) {
             TransportConnId id = sendMessage(message);
-            mRequestMap.put(id, sipRequest);
+            if(sipRequest.hasResponse()) {
+                mRequestMap.put(id, sipRequest);
+            }
         } else {
             Log.w(TAG, "build message is null");
         }
@@ -116,7 +118,7 @@ public class SipDevManager extends SipProvider {
             handleResponseMessage(sipRequest, msg);
             mRequestMap.remove(id);
         } else {
-            handleResponse(msg);
+            handleRequest(msg);
         }
     }
 
@@ -135,7 +137,7 @@ public class SipDevManager extends SipProvider {
         }
     }
 
-    private void handleResponse(Message message) {
+    private void handleRequest(Message message) {
         String body = message.getBody();
         if (!TextUtils.isEmpty(body)) {
             XmlToJson xmlToJson = new XmlToJson.Builder(body).build();
@@ -144,31 +146,24 @@ public class SipDevManager extends SipProvider {
             JsonElement data = null;
             try {
                 data = new JsonParser().parse(parse);
-                handle(data);
-            } catch (JsonSyntaxException e) {
+                handle(message, data);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void handle(JsonElement data) {
+    private void handle(Message message, JsonElement data) {
         if (data == null) {
             return;
         }
         if (data.isJsonObject()) {
             JsonObject jsonObject = data.getAsJsonObject();
-            //云台
-            if (jsonObject.has(ResponseMap.DIRECTION_CONTROL)) {
-                JsonElement control = jsonObject.get(ResponseMap.DIRECTION_CONTROL);
-                ControlData controlData = JsonUtil.fromJson(control, ResponseMap.getClazz("direction_control"));
-                if ("left".equals(controlData.operate)) {
-                    SerialPortManager.getInstance().writeData(SerialPortManager.TURN_LEFT);
-                } else if ("right".equals(controlData.operate)) {
-                    SerialPortManager.getInstance().writeData(SerialPortManager.TURN_RIGHT);
-                } else if ("stop".equals(controlData.operate)) {
-                    SerialPortManager.getInstance().writeData(SerialPortManager.STOP);
-                }
-                return;
+            Set<Map.Entry<String, JsonElement>> entrySet = jsonObject.entrySet();
+            Iterator iterator = entrySet.iterator();
+            if (iterator.hasNext()) {
+                Map.Entry<String, JsonElement> next = (Map.Entry<String, JsonElement>) iterator.next();
+                SipServiceManager.getInstance().handleRequest(next.getKey(), next.getValue().toString(), message);
             }
         }
     }

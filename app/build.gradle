@@ -24,8 +24,6 @@ android {
             }
         }
         ndk {
-            moduleName "serial_port"
-            ldLibs "log"
             abiFilters "armeabi"
         }
     }
@@ -57,6 +55,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api project(':basesdk')
+    implementation project(':basesdk')
     implementation project(':module_sip')
 }

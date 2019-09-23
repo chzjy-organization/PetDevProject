@@ -45,7 +45,7 @@ dependencies {
     api 'me.imid.swipebacklayout.lib:library:1.1.0'
     api 'com.makeramen:roundedimageview:2.3.0'
     api 'com.tencent:mmkv:1.0.22'
-    api 'com.tencent.mm.opensdk:wechat-sdk-android-with-mta:+'
+    api 'com.tencent.mm.opensdk:wechat-sdk-android-with-mta:5.1.6'
     api ('com.alibaba:arouter-api:1.5.0') {
         exclude module: 'support-v4'
     }

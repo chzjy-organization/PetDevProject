@@ -6,7 +6,7 @@ import android.util.Log;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.punuo.sys.sdk.httplib.JsonUtil;
-import com.punuo.sys.sip.SipConfig;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.SipMessageProcessor;
 import com.punuo.sys.sip.message.SipMessageFactory;
 
@@ -28,6 +28,7 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
     private Message mMessage;
     private int mCode;
     private String mReason;
+    private boolean hasResponse = true; //sip请求是否有response
 
     public BaseSipRequest() {
 
@@ -41,6 +42,13 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
         mSipRequestType = sipRequestType;
     }
 
+    public void setHasResponse(boolean hasResponse) {
+        this.hasResponse = hasResponse;
+    }
+
+    public boolean hasResponse() {
+        return hasResponse;
+    }
 
     public void setResponse(Message message, int code, String reason) {
         mMessage = message;

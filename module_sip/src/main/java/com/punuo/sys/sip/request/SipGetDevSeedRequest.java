@@ -1,6 +1,6 @@
 package com.punuo.sys.sip.request;
 
-import com.punuo.sys.sip.SipConfig;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.model.RegisterData;
 
 import org.zoolu.sip.address.NameAddress;

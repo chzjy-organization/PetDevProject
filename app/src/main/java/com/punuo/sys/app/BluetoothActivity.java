@@ -2,16 +2,15 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
@@ -26,10 +25,15 @@ import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
 import com.punuo.sys.sip.SipDevManager;
+import com.punuo.sys.sip.event.ReRegisterEvent;
 import com.punuo.sys.sip.model.RegisterData;
 import com.punuo.sys.sip.request.SipDevRegisterRequest;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.request.SipRequestListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 /**
  * Created by han.chen.
@@ -42,6 +46,7 @@ public class BluetoothActivity extends BaseActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
+    private boolean isFirst = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +60,11 @@ public class BluetoothActivity extends BaseActivity {
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Settings.ACTION_SETTINGS));
+//                startActivity(new Intent(Settings.ACTION_SETTINGS));
+                ARouter.getInstance().build("/sip/video_preview").navigation();
             }
         });
+        EventBus.getDefault().register(this);
     }
 
     private void init() {
@@ -225,10 +232,25 @@ public class BluetoothActivity extends BaseActivity {
         SipDevManager.getInstance().addRequest(registerRequest);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(ReRegisterEvent event) {
+        mBaseHandler.removeMessages(MSG_HEART_BEAR_VALUE);
+        registerDev();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        init();
-        registerDev();
+        if (isFirst) {
+            init();
+            registerDev();
+            isFirst = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }
