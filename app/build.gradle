@@ -24,7 +24,7 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi"
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
         }
     }
     buildTypes {
@@ -51,10 +51,18 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':basesdk')
     implementation project(':module_sip')
+    implementation files('libs/PetWeight.jar')
 }

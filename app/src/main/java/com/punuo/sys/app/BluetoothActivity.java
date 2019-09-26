@@ -2,6 +2,7 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -12,6 +13,8 @@ import android.widget.Button;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
+import com.leplay.petwight.PetWeight;
+import com.punuo.sys.app.Weighing.WeighingActivity;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
@@ -35,11 +38,14 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by han.chen.
  * Date on 2019-08-17.
  **/
-public class BluetoothActivity extends BaseActivity {
+public class BluetoothActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = "BluetoothActivity";
     public static final int MSG_HEART_BEAR_VALUE = 10086;
 
@@ -47,6 +53,9 @@ public class BluetoothActivity extends BaseActivity {
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
     private boolean isFirst = true;
+    private Button mWeight;
+    PetWeight mPeight;
+    Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +74,34 @@ public class BluetoothActivity extends BaseActivity {
             }
         });
         EventBus.getDefault().register(this);
+
+        mWeight = findViewById(R.id.weight);
+        mWeight.setOnClickListener(this);
+
+//        getQuality();
+        mTimer = new Timer();
+        setTimerTask();
     }
+
+    /**
+     * 以下两个方法用来测试称重精度，测试完成后再重新修改
+     */
+    public void setTimerTask(){
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                getQuality();
+            }
+        },0,1000*5);
+    }
+
+    public void getQuality(){
+        mPeight = new PetWeight();
+        mPeight.getWeight();
+        Log.i(TAG, "getQuality: "+mPeight.getWeight());
+    }
+
+
 
     private void init() {
         Log.i(TAG, "蓝牙状态 = " + mBluetoothAdapter.isEnabled());
@@ -252,5 +288,21 @@ public class BluetoothActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+
+        //关闭计时器
+        if (mTimer != null){
+            mTimer.cancel();
+            mTimer.purge();
+            mTimer = null;
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.weight:
+//                Intent intent = new Intent(BluetoothActivity.this, WeighingActivity.class);
+//                startActivity(intent);
+        }
     }
 }
