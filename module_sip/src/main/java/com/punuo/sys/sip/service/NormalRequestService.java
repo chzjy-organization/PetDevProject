@@ -45,7 +45,6 @@ public abstract class NormalRequestService<T> implements SipRequestService {
     protected void onResponse(Message msg) {
         mSipResponseRequest.setResponse(msg, 200, "OK");
         mSipResponseRequest.setBody(getBody());
-        mSipResponseRequest.setHasResponse(false);
         SipDevManager.getInstance().addRequest(mSipResponseRequest);
     }
 

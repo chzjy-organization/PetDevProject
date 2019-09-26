@@ -22,14 +22,11 @@ import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.activity.BaseActivity;
-import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
 import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.event.ReRegisterEvent;
-import com.punuo.sys.sip.model.RegisterData;
-import com.punuo.sys.sip.request.SipDevRegisterRequest;
+import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
-import com.punuo.sys.sip.request.SipRequestListener;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -186,56 +183,21 @@ public class BluetoothActivity extends BaseActivity {
 
     private void registerDev() {
         SipGetDevSeedRequest getDevSeedRequest = new SipGetDevSeedRequest();
-        getDevSeedRequest.setSipRequestListener(new SipRequestListener<RegisterData>() {
-            @Override
-            public void onComplete() {
-
-            }
-
-            @Override
-            public void onSuccess(RegisterData result) {
-                if (result == null) {
-                    return;
-                }
-                sipDevRegister(result);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                HandlerExceptionUtils.handleException(e);
-            }
-        });
         SipDevManager.getInstance().addRequest(getDevSeedRequest);
-    }
-
-    private void sipDevRegister(RegisterData data) {
-        SipDevRegisterRequest registerRequest = new SipDevRegisterRequest(data);
-        registerRequest.setSipRequestListener(new SipRequestListener<Object>() {
-            @Override
-            public void onComplete() {
-
-            }
-
-            @Override
-            public void onSuccess(Object result) {
-                //sip登陆注册成功 开启心跳保活
-                if (!mBaseHandler.hasMessages(MSG_HEART_BEAR_VALUE)) {
-                    mBaseHandler.sendEmptyMessage(MSG_HEART_BEAR_VALUE);
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                HandlerExceptionUtils.handleException(e);
-            }
-        });
-        SipDevManager.getInstance().addRequest(registerRequest);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(ReRegisterEvent event) {
         mBaseHandler.removeMessages(MSG_HEART_BEAR_VALUE);
         registerDev();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(LoginResponse event) {
+        //sip登陆注册成功 开启心跳保活
+        if (!mBaseHandler.hasMessages(MSG_HEART_BEAR_VALUE)) {
+            mBaseHandler.sendEmptyMessageDelayed(MSG_HEART_BEAR_VALUE, HeartBeatHelper.DELAY);
+        }
     }
 
     @Override

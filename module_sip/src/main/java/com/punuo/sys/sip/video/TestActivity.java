@@ -47,6 +47,7 @@ import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
 import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
 
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.opencore.avch264.NativeH264Encoder;
@@ -89,6 +90,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
 
         startEncoding();
+        EventBus.getDefault().register(this);
     }
 
     private void initSurfaceViewSize() {
@@ -136,7 +138,14 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView = null;
         mCameraButton = null;
         stopEncoding();
-        NativeH264Encoder.DeinitEncoder();
+        EventBus.getDefault().unregister(this);
+        //延迟销毁NativeH264Encoder
+        getWindow().getDecorView().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                NativeH264Encoder.DeinitEncoder();
+            }
+        }, 500);
         super.onDestroy();
     }
 
@@ -344,9 +353,14 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 long time = System.currentTimeMillis();
                 encoderTs = encoderTs + (time - oldTs);
                 frameData = mCameraBuffer.getFrame();
-                encodeResult = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
+                try {
+                    encodeResult = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    encodeResult = null;
+                }
                 int encodeState = NativeH264Encoder.getLastEncodeStatus();
-                if (encodeState == 0 && encodeResult.length > 0) {
+                if (encodeState == 0 && encodeResult != null && encodeResult.length > 0) {
                     //TODO 编码成功分包发送
                     Log.d(TAG, "编码成功");
 //                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);

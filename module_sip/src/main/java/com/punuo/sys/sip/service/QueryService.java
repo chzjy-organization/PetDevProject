@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
+import com.punuo.sys.sip.request.BaseSipRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,5 +50,10 @@ public class QueryService extends NormalRequestService<String> {
     @Override
     protected void onError(Exception e) {
         HandlerExceptionUtils.handleException(e);
+    }
+
+    @Override
+    public void handleTimeOut(BaseSipRequest baseSipRequest) {
+
     }
 }
