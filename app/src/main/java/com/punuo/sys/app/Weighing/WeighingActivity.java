@@ -3,7 +3,7 @@ package com.punuo.sys.app.Weighing;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.leplay.petwight.PetWeight;
+import com.punuo.pet.weight.PetWeight;
 import com.punuo.sys.app.Weighing.requset.SipGetWeightRequest;
 import com.punuo.sys.app.Weighing.tool.WeightData;
 import com.punuo.sys.sdk.activity.BaseActivity;
@@ -16,7 +16,6 @@ import java.util.TimerTask;
 
 public class WeighingActivity extends BaseActivity {
 
-    PetWeight mPetWeight;
     Timer mTimer;
 
     @Override
@@ -67,9 +66,7 @@ public class WeighingActivity extends BaseActivity {
 
 
     public int getQuality(){
-        mPetWeight = new PetWeight();
-        mPetWeight.getWeight();
-        return mPetWeight.getWeight();
+        return PetWeight.getWeight();
     }
 
 
