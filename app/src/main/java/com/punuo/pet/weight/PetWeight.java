@@ -8,6 +8,8 @@ public class PetWeight {
 
     public static native int getWeight();
 
+    public static native void clear(int lastWeight);
+
     static {
         System.loadLibrary("petWeight");
     }
