@@ -64,5 +64,4 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':basesdk')
     implementation project(':module_sip')
-    implementation files('libs/PetWeight.jar')
 }
