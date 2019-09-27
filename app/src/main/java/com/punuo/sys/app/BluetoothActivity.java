@@ -95,6 +95,7 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
     public void getQuality(){
         PetWeight.clear(500);
         Log.i(TAG, "getQuality: "+ PetWeight.getWeight());
+
     }
 
 
