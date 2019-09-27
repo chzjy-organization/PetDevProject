@@ -2,6 +2,7 @@ package com.punuo.sys.sip.service;
 
 import com.alibaba.android.arouter.facade.template.IProvider;
 import com.google.gson.JsonElement;
+import com.punuo.sys.sip.request.BaseSipRequest;
 
 import org.zoolu.sip.message.Message;
 
@@ -12,4 +13,6 @@ import org.zoolu.sip.message.Message;
 public interface SipRequestService extends IProvider {
 
     void handleRequest(Message msg, JsonElement jsonElement);
+
+    void handleTimeOut(BaseSipRequest baseSipRequest);
 }

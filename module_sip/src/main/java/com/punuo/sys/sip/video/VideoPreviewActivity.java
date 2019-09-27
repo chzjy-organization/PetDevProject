@@ -12,8 +12,12 @@ import android.view.WindowManager;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
+import com.punuo.sys.sip.model.RecvaddrData;
 import com.serenegiant.common.BaseActivity;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.opencore.avch264.NativeH264Encoder;
 
 import butterknife.BindView;
@@ -44,6 +48,7 @@ public class VideoPreviewActivity extends BaseActivity {
         ButterKnife.bind(this);
         initSurfaceViewSize();
         init();
+        EventBus.getDefault().register(this);
     }
 
     private void init() {
@@ -167,6 +172,12 @@ public class VideoPreviewActivity extends BaseActivity {
         super.onDestroy();
         stopEncoding();
         NativeH264Encoder.DeinitEncoder();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(RecvaddrData data) {
+        finish();
     }
 
     private boolean started = false;

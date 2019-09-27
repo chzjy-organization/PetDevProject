@@ -1,7 +1,5 @@
 package com.punuo.sys.sip.request;
 
-import com.punuo.sys.sip.model.HeartBeatData;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,10 +10,11 @@ import fr.arnaudguyon.xmltojsonlib.JsonToXml;
  * Date on 2019-08-12.
  * 心跳请求
  **/
-public class SipHeartBeatRequest extends BaseSipRequest<HeartBeatData> {
+public class SipHeartBeatRequest extends BaseSipRequest{
 
     public SipHeartBeatRequest() {
         setSipRequestType(SipRequestType.Register);
+        setTargetResponse("login_response");
     }
 
     @Override
