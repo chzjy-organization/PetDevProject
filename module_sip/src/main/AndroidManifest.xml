@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.punuo.sys.sip">
+
+    <application>
+        <activity
+            android:name=".video.VideoPreviewActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Pn.Translucent" />
+        <activity
+            android:name=".video.TestActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Pn.Translucent" />
+    </application>
+</manifest>

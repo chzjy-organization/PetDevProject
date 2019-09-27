@@ -18,6 +18,14 @@ android {
         targetSdkVersion gradle.sdk.targetSdkVersion
         versionCode gradle.sdk.versionCode
         versionName gradle.sdk.versionName
+        javaCompileOptions {
+            annotationProcessorOptions {
+                includeCompileClasspath = true
+            }
+        }
+        ndk {
+            abiFilters "armeabi"
+        }
     }
     buildTypes {
         release {
@@ -47,6 +55,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api project(':basesdk')
-
+    implementation project(':basesdk')
+    implementation project(':module_sip')
 }

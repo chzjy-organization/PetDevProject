@@ -1,0 +1,37 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jakewharton.butterknife'
+
+android {
+    compileSdkVersion gradle.sdk.compileSdkVersion
+    defaultConfig {
+        minSdkVersion gradle.sdk.minSdkVersion
+        targetSdkVersion gradle.sdk.targetSdkVersion
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':basesdk')
+    annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
+    implementation project(':libuvccamera')
+}
