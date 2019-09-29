@@ -117,7 +117,6 @@ public class BluetoothActivity extends BaseActivity {
         }
     }
 
-
     private int dis = 1;
     private int con = 1;
 
