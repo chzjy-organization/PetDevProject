@@ -2,7 +2,6 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.widget.Button;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
 import com.leplay.petwight.PetWeight;
-import com.punuo.sys.app.Weighing.WeighingActivity;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
@@ -99,6 +97,7 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
         mPeight = new PetWeight();
         mPeight.getWeight();
         Log.i(TAG, "getQuality: "+mPeight.getWeight());
+        Log.i(TAG, "new getQuality: "+ com.punuo.pet.weight.PetWeight.getWeight());
     }
 
 
