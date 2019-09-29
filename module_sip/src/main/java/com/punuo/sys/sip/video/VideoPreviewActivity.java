@@ -9,6 +9,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import com.alibaba.android.arouter.facade.annotation.Route;
+import com.punuo.encode.VideoEncode;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
@@ -18,7 +20,6 @@ import com.serenegiant.common.BaseActivity;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.opencore.avch264.NativeH264Encoder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,7 +28,7 @@ import butterknife.ButterKnife;
  * Created by han.chen.
  * Date on 2019-09-16.
  **/
-//@Route(path = "/sip/video_preview")
+@Route(path = "/sip/video_preview")
 public class VideoPreviewActivity extends BaseActivity {
     private String TAG = "VideoPreviewActivity";
 
@@ -55,7 +56,7 @@ public class VideoPreviewActivity extends BaseActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         mCameraBuffer = new CameraBuffer();
-        NativeH264Encoder.InitEncoder(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
+        VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
 
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderCallback);
@@ -171,7 +172,13 @@ public class VideoPreviewActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopEncoding();
-        NativeH264Encoder.DeinitEncoder();
+        getWindow().getDecorView().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                VideoEncode.flush();
+                VideoEncode.close();
+            }
+        }, 500);
         EventBus.getDefault().unregister(this);
     }
 
@@ -189,32 +196,22 @@ public class VideoPreviewActivity extends BaseActivity {
             if (mCameraBuffer == null) {
                 return;
             }
-
-            int timeToSleep = 1000 / H264Config.FRAME_RATE;
             byte[] frameData;
-            byte[] encodeResult;
-            long encoderTs = 0;
-            long oldTs = System.currentTimeMillis();
+            byte[] encodeResult = null;
+
             while (started) {
-                long time = System.currentTimeMillis();
-                encoderTs = encoderTs + (time - oldTs);
                 frameData = mCameraBuffer.getFrame();
-                encodeResult = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
-                int encodeState = NativeH264Encoder.getLastEncodeStatus();
-                if (encodeState == 0 && encodeResult.length > 0) {
+                try {
+                    encodeResult = VideoEncode.encode(frameData);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    encodeResult = null;
+                }
+                if (encodeResult != null && encodeResult.length > 0) {
                     //TODO 编码成功分包发送
                     Log.d(TAG, "编码成功");
 //                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
                 }
-                // Sleep between frames if necessary
-                long delta = System.currentTimeMillis() - time;
-                if (delta < timeToSleep) {
-                    try {
-                        Thread.sleep((timeToSleep - delta) - (((timeToSleep - delta) * 10) / 100));
-                    } catch (InterruptedException e) {
-                    }
-                }
-                oldTs = time;
             }
         }
     }
