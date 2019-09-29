@@ -96,7 +96,7 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
     public void getQuality(){
         mPeight = new PetWeight();
         mPeight.getWeight();
-        Log.i(TAG, "getQuality: "+mPeight.getWeight());
+//        Log.i(TAG, "getQuality: "+mPeight.getWeight());
         Log.i(TAG, "new getQuality: "+ com.punuo.pet.weight.PetWeight.getWeight());
     }
 
