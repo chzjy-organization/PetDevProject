@@ -12,7 +12,6 @@ import android.widget.Button;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
-import com.punuo.pet.weight.PetWeight;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
@@ -94,8 +93,8 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
 
     public void getQuality(){
 //        PetWeight.clear(500);
-        Log.i(TAG, "getQuality: "+ PetWeight.getWeight());
-
+//        Log.i(TAG, "getQuality: "+ PetWeight.getWeight());
+        Log.i(TAG, "getQuality: " + new com.leplay.petwight.PetWeight().getWeight());
     }
 
 
