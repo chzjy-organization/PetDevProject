@@ -55,8 +55,12 @@ public class VideoPreviewActivity extends BaseActivity {
     private void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+        MediaRtpSender.getInstance().init();
         mCameraBuffer = new CameraBuffer();
-        VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
+        byte[] a = VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
+        for (int i = 0; i < a.length; i++) {
+            System.out.println(a[i]);
+        }
 
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderCallback);
@@ -122,8 +126,8 @@ public class VideoPreviewActivity extends BaseActivity {
             return;
         }
         Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewFpsRange(H264Config.FRAME_RATE, H264Config.FRAME_RATE);
-        parameters.setPictureFormat(ImageFormat.YV12);
+        parameters.setPreviewFrameRate(H264Config.FRAME_RATE);
+        parameters.setPictureFormat(ImageFormat.NV21);
         parameters.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
         parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         camera.setParameters(parameters);
@@ -172,6 +176,7 @@ public class VideoPreviewActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopEncoding();
+        MediaRtpSender.getInstance().onDestory();
         getWindow().getDecorView().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -200,17 +205,18 @@ public class VideoPreviewActivity extends BaseActivity {
             byte[] encodeResult = null;
 
             while (started) {
+                Log.d(TAG, "开始编码");
                 frameData = mCameraBuffer.getFrame();
                 try {
                     encodeResult = VideoEncode.encode(frameData);
+                    if (encodeResult != null && encodeResult.length > 0) {
+                        //TODO 编码成功分包发送
+                        Log.d(TAG, "编码成功");
+                        MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    encodeResult = null;
-                }
-                if (encodeResult != null && encodeResult.length > 0) {
-                    //TODO 编码成功分包发送
-                    Log.d(TAG, "编码成功");
-//                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
+                    Log.e(TAG, "run: ", e);
                 }
             }
         }
