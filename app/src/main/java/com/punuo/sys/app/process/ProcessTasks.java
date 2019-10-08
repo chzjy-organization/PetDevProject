@@ -70,7 +70,7 @@ public class ProcessTasks {
 
             @Override
             public String getDevId() {
-                return "310023000100310001";
+                return "310023001139940001";
             }
 
             @Override

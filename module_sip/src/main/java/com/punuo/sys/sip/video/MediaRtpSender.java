@@ -45,8 +45,6 @@ public class MediaRtpSender {
      */
     private boolean dividingFrame = false;
 
-    private SendActivePacket mSendActivePacket;
-
     private static MediaRtpSender mediaRtpSender;
 
     public static MediaRtpSender getInstance() {
@@ -76,14 +74,10 @@ public class MediaRtpSender {
         rtpVoiceSession = new RTPSession(rtpSocket, rtcpSocket);
         rtpVoiceSession.addParticipant(participant);
         rtpVoiceSession.setSsrc(voicesSrc);
-        mSendActivePacket = new SendActivePacket();
-        mSendActivePacket.startThread();
     }
 
-    public void onDestory() {
-        if (mSendActivePacket != null) {
-            mSendActivePacket.stopThread();
-        }
+    public void onDestroy() {
+
     }
 
     public static void initMediaData(MediaData mediaData) {
@@ -111,7 +105,13 @@ public class MediaRtpSender {
                 | ((magic[12] << 24) & 0xff000000);
     }
 
-    private void sendActivePacket(byte[] msg) {
+    public void sendActivePacket() {
+        byte[] msg = new byte[20];
+        msg[0] = 0x00;
+        msg[1] = 0x01;
+        msg[2] = 0x00;
+        msg[3] = 0x10;
+        System.arraycopy(magic, 0, msg, 4, 16);
         rtpVideoSession.payloadType(0x7a);
         for (int i = 0; i < 2; i++) {
             rtpVideoSession.sendData(msg);
@@ -174,6 +174,11 @@ public class MediaRtpSender {
         rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -194,6 +199,11 @@ public class MediaRtpSender {
         rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -216,6 +226,11 @@ public class MediaRtpSender {
         rtpVideoSession.sendData(rtppktLast);
         status = false;  //打包组包结束，下一步进行解码
         dividingFrame = false;  //一帧分片打包完毕，时间戳改下一帧
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -227,41 +242,10 @@ public class MediaRtpSender {
         rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(encodeResult);
-    }
-
-    public class SendActivePacket extends Thread {
-        private boolean running = false;
-        private byte[] msg = new byte[20];
-
-        public SendActivePacket() {
-            msg[0] = 0x00;
-            msg[1] = 0x01;
-            msg[2] = 0x00;
-            msg[3] = 0x10;
-            System.arraycopy(magic, 0, msg, 4, 16);
-        }
-
-        @Override
-        public void run() {
-            while (running) {
-                try {
-                    Log.d("SendActivePacket", "run: " + Thread.currentThread().getId());
-                    sendActivePacket(msg);
-                    sleep(20 * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public void startThread() {
-            running = true;
-            super.start();
-        }
-
-        public void stopThread() {
-            running = false;
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
-
 }

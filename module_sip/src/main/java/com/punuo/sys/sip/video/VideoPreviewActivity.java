@@ -38,7 +38,7 @@ public class VideoPreviewActivity extends BaseActivity {
     private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
     private CameraBuffer mCameraBuffer;
-    private VideoEncodeThread mVideoEncodeThread;
+//    private VideoEncodeThread mVideoEncodeThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +47,8 @@ public class VideoPreviewActivity extends BaseActivity {
         //防止锁屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ButterKnife.bind(this);
-        initSurfaceViewSize();
         init();
+        initSurfaceViewSize();
         EventBus.getDefault().register(this);
     }
 
@@ -76,7 +76,7 @@ public class VideoPreviewActivity extends BaseActivity {
     private SurfaceHolder.Callback mSurfaceHolderCallback = new SurfaceHolder.Callback() {
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
-
+            mSurfaceHolder = holder;
         }
 
         @Override
@@ -115,7 +115,6 @@ public class VideoPreviewActivity extends BaseActivity {
             mCamera.setPreviewCallback(mPreviewCallback);
             mCamera.setDisplayOrientation(90);
             initParameters(mCamera);
-            mCamera.startPreview();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -127,56 +126,66 @@ public class VideoPreviewActivity extends BaseActivity {
         }
         Camera.Parameters parameters = camera.getParameters();
         parameters.setPreviewFrameRate(H264Config.FRAME_RATE);
-        parameters.setPictureFormat(ImageFormat.NV21);
+        parameters.setPreviewFormat(ImageFormat.YV12);
         parameters.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
         parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         camera.setParameters(parameters);
+        camera.startPreview();
     }
 
     private Camera.PreviewCallback mPreviewCallback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            if (mCameraBuffer != null) {
-                mCameraBuffer.setFrame(data);
+//            if (mCameraBuffer != null) {
+//                mCameraBuffer.setFrame(data);
+//            }
+            try {
+                byte[] encodeResult = VideoEncode.encode(data);
+                if (encodeResult != null && encodeResult.length > 0) {
+                    //TODO 编码成功分包发送
+                    Log.d(TAG, "编码成功");
+                    MediaRtpSender.getInstance().sendActivePacket();
+                    MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };
 
     private void startEncoding() {
         started = true;
-        mVideoEncodeThread = new VideoEncodeThread();
-        mVideoEncodeThread.start();
+//        mVideoEncodeThread = new VideoEncodeThread();
+//        mVideoEncodeThread.start();
     }
 
     private void stopEncoding() {
         started = false;
         try {
-            if (mVideoEncodeThread != null) {
-                mVideoEncodeThread.interrupt();
-            }
+//            if (mVideoEncodeThread != null) {
+//                mVideoEncodeThread.interrupt();
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        mVideoEncodeThread = null;
+//        mVideoEncodeThread = null;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        resetCamera();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        initCamera();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopEncoding();
-        MediaRtpSender.getInstance().onDestory();
+        MediaRtpSender.getInstance().onDestroy();
         getWindow().getDecorView().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -216,7 +225,6 @@ public class VideoPreviewActivity extends BaseActivity {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.e(TAG, "run: ", e);
                 }
             }
         }
