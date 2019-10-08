@@ -1,5 +1,7 @@
 package com.punuo.sys.sip.video;
 
+import android.util.Log;
+
 import com.punuo.sys.sip.model.MediaData;
 
 import java.net.DatagramSocket;
@@ -15,6 +17,7 @@ import jlibrtp.RTPSession;
 public class MediaRtpSender {
     private static String rtpIp; //目标ip
     private static int rtpPort; //目标port
+    private static byte[] magic;
     private static long voicesSrc; //音频同步源
     private static long videosSrc; //视频同步源
     private DatagramSocket rtpSocket;
@@ -67,12 +70,13 @@ public class MediaRtpSender {
         rtpVideoSession = new RTPSession(rtpSocket, rtcpSocket);
         rtpVideoSession.addParticipant(participant);
         rtpVideoSession.setSsrc(videosSrc);
-        //设置RTP包的负载类型为0x62
-        rtpVideoSession.payloadType(0x62);
 
         rtpVoiceSession = new RTPSession(rtpSocket, rtcpSocket);
         rtpVoiceSession.addParticipant(participant);
         rtpVoiceSession.setSsrc(voicesSrc);
+    }
+
+    public void onDestroy() {
 
     }
 
@@ -82,30 +86,36 @@ public class MediaRtpSender {
         }
         rtpIp = mediaData.getIp();
         rtpPort = mediaData.getPort();
-        byte[] magic = mediaData.getMagic();
-        voicesSrc = generateVoiceSsrc(magic);
-        videosSrc = generateVideoSsrc(magic);
+        magic = mediaData.getMagic();
+        voicesSrc = generateVoiceSsrc();
+        videosSrc = generateVideoSsrc();
     }
 
-    private static long generateVoiceSsrc(byte[] magic) {
+    private static long generateVoiceSsrc() {
         return (magic[15] & 0x000000ff)
                 | ((magic[14] << 8) & 0x0000ff00)
                 | ((magic[13] << 16) & 0x00ff0000)
                 | ((magic[12] << 24) & 0xff000000);
     }
 
-    private static long generateVideoSsrc(byte[] magic) {
-        byte[] videoMagic = new byte[20];
-        videoMagic[0] = 0x00;
-        videoMagic[1] = 0x01;
-        videoMagic[2] = 0x00;
-        videoMagic[3] = 0x10;
-        //生成RTP心跳保活包，即在magic之前再加上0x00 0x01 0x00 0x10
-        System.arraycopy(magic, 0, videoMagic, 4, 16);
-        return (videoMagic[15] & 0x000000ff)
-                | ((videoMagic[14] << 8) & 0x0000ff00)
-                | ((videoMagic[13] << 16) & 0x00ff0000)
-                | ((videoMagic[12] << 24) & 0xff000000);
+    private static long generateVideoSsrc() {
+        return (magic[15] & 0x000000ff)
+                | ((magic[14] << 8) & 0x0000ff00)
+                | ((magic[13] << 16) & 0x00ff0000)
+                | ((magic[12] << 24) & 0xff000000);
+    }
+
+    public void sendActivePacket() {
+        byte[] msg = new byte[20];
+        msg[0] = 0x00;
+        msg[1] = 0x01;
+        msg[2] = 0x00;
+        msg[3] = 0x10;
+        System.arraycopy(magic, 0, msg, 4, 16);
+        rtpVideoSession.payloadType(0x7a);
+        for (int i = 0; i < 2; i++) {
+            rtpVideoSession.sendData(msg);
+        }
     }
 
     /**
@@ -149,6 +159,7 @@ public class MediaRtpSender {
      * 发送首包
      */
     private void sendFirstPacket(byte[] encodeResult) {
+        Log.i("MediaRtpSender", "sendFirstPacket: 首包");
         rtppkt[0] = (byte) (encodeResult[4] & 0xe0);
         rtppkt[0] = (byte) (rtppkt[4] + 0x1c);
         rtppkt[1] = (byte) (0x80 + (encodeResult[4] & 0x1f));
@@ -159,14 +170,22 @@ public class MediaRtpSender {
         }
         pktFlag = pktFlag + divideLength;
         firstPktReceived = true;
+        //设置RTP包的负载类型为0x62
+        rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 发送中包
      */
     private void sendMiddlePacket(byte[] encodeResult) {
+        Log.i("MediaRtpSender", "sendMiddlePacket: 中包");
         rtppkt[0] = (byte) (encodeResult[0] & 0xe0); //获取Nalu单元的前三位
         rtppkt[0] = (byte) (rtppkt[0] + 0x1c); //加上Fu-A的type值28（0x1c）即组成FU indicator
         rtppkt[1] = (byte) ((encodeResult[0] & 0x1f)); //中包的ser为000加上Nalu的type组成 FU header
@@ -176,14 +195,22 @@ public class MediaRtpSender {
             e.printStackTrace();
         }
         pktFlag = pktFlag + divideLength;
+        //设置RTP包的负载类型为0x62
+        rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(rtppkt);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 发送末包
      */
     private void sendLastPacket(byte[] encodeResult) {
+        Log.i("MediaRtpSender", "sendLastPacket: 末包");
         byte[] rtppktLast = new byte[encodeResult.length - pktFlag + 2];
         rtppktLast[0] = (byte) (encodeResult[0] & 0xe0);
         rtppktLast[0] = (byte) (rtppktLast[0] + 0x1c);
@@ -193,18 +220,32 @@ public class MediaRtpSender {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //设置RTP包的负载类型为0x62
+        rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(rtppktLast);
         status = false;  //打包组包结束，下一步进行解码
         dividingFrame = false;  //一帧分片打包完毕，时间戳改下一帧
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 发送完整包
      */
     private void sendCompletePacket(byte[] encodeResult) {
+        Log.i("MediaRtpSender", "sendCompletePacket: 整包");
+        //设置RTP包的负载类型为0x62
+        rtpVideoSession.payloadType(0x62);
         //发送打包数据
         rtpVideoSession.sendData(encodeResult);
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
-
 }

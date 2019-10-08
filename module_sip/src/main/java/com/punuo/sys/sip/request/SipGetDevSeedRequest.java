@@ -1,7 +1,6 @@
 package com.punuo.sys.sip.request;
 
 import com.punuo.sys.sip.config.SipConfig;
-import com.punuo.sys.sip.model.RegisterData;
 
 import org.zoolu.sip.address.NameAddress;
 
@@ -10,9 +9,10 @@ import org.zoolu.sip.address.NameAddress;
  * Date on 2019-08-12.
  * 提交密码
  **/
-public class SipGetDevSeedRequest extends BaseSipRequest<RegisterData> {
+public class SipGetDevSeedRequest extends BaseSipRequest {
     public SipGetDevSeedRequest() {
         setSipRequestType(SipRequestType.Register);
+        setTargetResponse("negotiate_response");
     }
 
     @Override

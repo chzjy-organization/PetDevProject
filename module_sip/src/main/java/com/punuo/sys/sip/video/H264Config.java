@@ -18,7 +18,7 @@ public class H264Config {
     /**
      * Default video frame rate
      */
-    public final static int FRAME_RATE = 10;
+    public final static int FRAME_RATE = 15;
     /**
      * Default video type
      */

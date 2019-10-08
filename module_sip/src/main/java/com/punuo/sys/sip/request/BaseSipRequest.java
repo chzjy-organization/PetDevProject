@@ -1,41 +1,30 @@
 package com.punuo.sys.sip.request;
 
-import android.text.TextUtils;
-import android.util.Log;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.punuo.sys.sdk.httplib.JsonUtil;
 import com.punuo.sys.sip.config.SipConfig;
-import com.punuo.sys.sip.SipMessageProcessor;
 import com.punuo.sys.sip.message.SipMessageFactory;
+import com.punuo.sys.sip.service.SipServiceManager;
 
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.message.Message;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-
-import fr.arnaudguyon.xmltojsonlib.XmlToJson;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by han.chen.
  * Date on 2019-08-12.
  **/
-public class BaseSipRequest<T> implements SipMessageProcessor<T> {
+public class BaseSipRequest {
     private SipRequestType mSipRequestType;
-    private SipRequestListener<T> mSipRequestListener;
     private Message mMessage;
     private int mCode;
     private String mReason;
     private boolean hasResponse = true; //sip请求是否有response
+    private String mTargetResponse = "";
+    private Timer mTimer = new Timer();
 
     public BaseSipRequest() {
 
-    }
-
-    public void setSipRequestListener(SipRequestListener<T> sipRequestListener) {
-        mSipRequestListener = sipRequestListener;
     }
 
     public void setSipRequestType(SipRequestType sipRequestType) {
@@ -48,6 +37,28 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
 
     public boolean hasResponse() {
         return hasResponse;
+    }
+
+    public void setTargetResponse(String targetResponse) {
+        mTargetResponse = targetResponse;
+    }
+
+    public String getTargetResponse() {
+        return mTargetResponse;
+    }
+
+    public void startCounting() {
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+//                Log.i("han.chen", "run: 超时" + mTargetResponse);
+                SipServiceManager.getInstance().handleTimeOut(mTargetResponse, BaseSipRequest.this);
+            }
+        }, 3 * 1000);
+    }
+
+    public void response() {
+        mTimer.cancel();
     }
 
     public void setResponse(Message message, int code, String reason) {
@@ -83,47 +94,6 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
         return null;
     }
 
-
-    @Override
-    public void deliverResponse(Message message) {
-        String body = message.getBody();
-        if (!TextUtils.isEmpty(body)) {
-            XmlToJson xmlToJson = new XmlToJson.Builder(body).build();
-            String parse = xmlToJson.toString();
-            Log.d("SipRequest", "deliverResponse: \n" + parse);
-            JsonElement data = null;
-            try {
-                data = new JsonParser().parse(parse);
-                deliverResponse(jsonParse(data, parse), message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void deliverResponse(T data, Message message) {
-        try {
-            if (mSipRequestListener != null) {
-                mSipRequestListener.onSuccess(data);
-                mSipRequestListener.onComplete();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void deliverError(Exception error) {
-        try {
-            if (mSipRequestListener != null) {
-                mSipRequestListener.onError(error);
-                mSipRequestListener.onComplete();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public Message build() {
         switch (mSipRequestType) {
             case Register:
@@ -143,33 +113,5 @@ public class BaseSipRequest<T> implements SipMessageProcessor<T> {
             default:
                 return null;
         }
-    }
-
-    protected T jsonParse(JsonElement result, String response) {
-        if (result == null) {
-            return jsonParse(response);
-        }
-        Type type = getType();
-        if (type == String.class) {
-            return (T) response;
-        }
-        return JsonUtil.fromJsonNoCatch(result, getType());
-    }
-
-    protected T jsonParse(String result) {
-        Type type = getType();
-        if (type == String.class) {
-            return (T) result;
-        }
-        return JsonUtil.fromJson(result, getType());
-    }
-
-    public Type getType() {
-        Type superclass = getClass().getGenericSuperclass();
-        if (superclass instanceof Class) {
-            throw new RuntimeException("Missing type parameter.");
-        }
-        ParameterizedType parameterized = (ParameterizedType) superclass;
-        return parameterized.getActualTypeArguments()[0];
     }
 }
