@@ -35,7 +35,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.alibaba.android.arouter.facade.annotation.Route;
+import com.punuo.encode.VideoEncode;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.model.RecvaddrData;
@@ -50,12 +50,12 @@ import com.serenegiant.usb.UVCCamera;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.opencore.avch264.NativeH264Encoder;
+
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-@Route(path = "/sip/video_preview")
+//@Route(path = "/sip/video_preview")
 public class TestActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final boolean DEBUG = true;    // TODO set false when production
     private static final String TAG = "MainActivity";
@@ -79,7 +79,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         StrictMode.setThreadPolicy(policy);
         MediaRtpSender.getInstance().init();
         mCameraBuffer = new CameraBuffer();
-        NativeH264Encoder.InitEncoder(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
+        VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
 
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mCameraButton = (ImageButton) findViewById(R.id.camera_button);
@@ -143,7 +143,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         getWindow().getDecorView().postDelayed(new Runnable() {
             @Override
             public void run() {
-                NativeH264Encoder.DeinitEncoder();
+                VideoEncode.flush();
+                VideoEncode.close();
             }
         }, 500);
         super.onDestroy();
@@ -344,36 +345,21 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 return;
             }
 
-            int timeToSleep = 1000 / H264Config.FRAME_RATE;
             byte[] frameData;
             byte[] encodeResult;
-            long encoderTs = 0;
-            long oldTs = System.currentTimeMillis();
             while (started) {
-                long time = System.currentTimeMillis();
-                encoderTs = encoderTs + (time - oldTs);
                 frameData = mCameraBuffer.getFrame();
                 try {
-                    encodeResult = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
+                    encodeResult = VideoEncode.encode(frameData);
                 } catch (Exception e) {
                     e.printStackTrace();
                     encodeResult = null;
                 }
-                int encodeState = NativeH264Encoder.getLastEncodeStatus();
-                if (encodeState == 0 && encodeResult != null && encodeResult.length > 0) {
+                if (encodeResult != null && encodeResult.length > 0) {
                     //TODO 编码成功分包发送
                     Log.d(TAG, "编码成功");
 //                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
                 }
-                // Sleep between frames if necessary
-                long delta = System.currentTimeMillis() - time;
-                if (delta < timeToSleep) {
-                    try {
-                        Thread.sleep((timeToSleep - delta) - (((timeToSleep - delta) * 10) / 100));
-                    } catch (InterruptedException e) {
-                    }
-                }
-                oldTs = time;
             }
         }
     }
