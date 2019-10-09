@@ -7,7 +7,6 @@ import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.MediaData;
 import com.punuo.sys.sip.request.BaseSipRequest;
-import com.punuo.sys.sip.video.MediaRtpSender;
 
 import org.zoolu.sip.message.Message;
 
@@ -28,7 +27,6 @@ public class MediaService extends NormalRequestService<MediaData> {
         Log.d("han.chen", "Media 收到视频请求");
         if (result != null) {
             onResponse(msg);
-            MediaRtpSender.initMediaData(result);
             ARouter.getInstance().build("/sip/video_preview")
                     .navigation();
         }

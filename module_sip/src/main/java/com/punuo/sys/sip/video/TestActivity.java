@@ -35,7 +35,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.punuo.encode.VideoEncode;
+import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.model.RecvaddrData;
@@ -51,14 +51,13 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
 //@Route(path = "/sip/video_preview")
 public class TestActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final boolean DEBUG = true;    // TODO set false when production
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "TestActivity";
 
     private final Object mSync = new Object();
     // for accessing USB and USB camera
@@ -69,7 +68,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
     private ImageButton mCameraButton;
     private Surface mPreviewSurface;
     private boolean isActive, isPreview;
-    private CameraBuffer mCameraBuffer;
+    private NativeStreamer mNativeStreamer;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -77,10 +76,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         setContentView(R.layout.sip_activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        MediaRtpSender.getInstance().init();
-        mCameraBuffer = new CameraBuffer();
-        VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
-
+        mNativeStreamer = new NativeStreamer();
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mCameraButton = (ImageButton) findViewById(R.id.camera_button);
         mCameraButton.setOnClickListener(mOnClickListener);
@@ -89,7 +85,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         initSurfaceViewSize();
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
 
-        startEncoding();
         EventBus.getDefault().register(this);
     }
 
@@ -121,9 +116,25 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         super.onStop();
     }
 
+    private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
+
+    private void encodeStart() {
+        if (mNativeStreamer != null) {
+            rtmpOpenResult = mNativeStreamer.startPublish(H264Config.RTMP_STREAM,
+                    H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+        }
+    }
+
+    private void encodeStop() {
+        if (rtmpOpenResult != -1) {
+            mNativeStreamer.stopPublish();
+        }
+    }
+
     @Override
     protected void onDestroy() {
         if (DEBUG) Log.v(TAG, "onDestroy:");
+        encodeStop();
         synchronized (mSync) {
             isActive = isPreview = false;
             if (mUVCCamera != null) {
@@ -137,16 +148,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         }
         mUVCCameraView = null;
         mCameraButton = null;
-        stopEncoding();
         EventBus.getDefault().unregister(this);
-        //延迟销毁NativeH264Encoder
-        getWindow().getDecorView().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                VideoEncode.flush();
-                VideoEncode.close();
-            }
-        }, 500);
         super.onDestroy();
     }
 
@@ -293,6 +295,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                     isPreview = true;
                 }
             }
+            //开启推流
+            encodeStart();
         }
 
         @Override
@@ -311,58 +315,11 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
     private final IFrameCallback mIFrameCallback = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
-            if (mCameraBuffer != null) {
-                mCameraBuffer.setFrame(frame.array());
+            if (mNativeStreamer != null && rtmpOpenResult != -1) {
+                mNativeStreamer.onPreviewFrame(frame.array(), H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
             }
         }
     };
-
-    private void startEncoding() {
-        started = true;
-        mVideoEncodeThread = new VideoEncodeThread();
-        mVideoEncodeThread.start();
-    }
-
-    private void stopEncoding() {
-        started = false;
-        try {
-            if (mVideoEncodeThread != null) {
-                mVideoEncodeThread.interrupt();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        mVideoEncodeThread = null;
-    }
-    private VideoEncodeThread mVideoEncodeThread;
-    private boolean started = false;
-    public class VideoEncodeThread extends Thread {
-        private String TAG = "VideoEncodeThread";
-
-        @Override
-        public void run() {
-            if (mCameraBuffer == null) {
-                return;
-            }
-
-            byte[] frameData;
-            byte[] encodeResult;
-            while (started) {
-                frameData = mCameraBuffer.getFrame();
-                try {
-                    encodeResult = VideoEncode.encode(frameData);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    encodeResult = null;
-                }
-                if (encodeResult != null && encodeResult.length > 0) {
-                    //TODO 编码成功分包发送
-                    Log.d(TAG, "编码成功");
-//                MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
-                }
-            }
-        }
-    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
