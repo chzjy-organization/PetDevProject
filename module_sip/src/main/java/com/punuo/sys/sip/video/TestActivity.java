@@ -123,6 +123,9 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         if (mNativeStreamer != null) {
             rtmpOpenResult = mNativeStreamer.startPublish(H264Config.RTMP_STREAM,
                     H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            if (rtmpOpenResult != -1) {
+                Log.i(TAG, "encodeStart: 开始推流");
+            }
         }
     }
 
@@ -135,7 +138,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
     @Override
     protected void onDestroy() {
         if (DEBUG) Log.v(TAG, "onDestroy:");
-        encodeStop();
         synchronized (mSync) {
             isActive = isPreview = false;
             if (mUVCCamera != null) {
@@ -210,6 +212,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                         }
                         mPreviewSurface = mUVCCameraView.getHolder().getSurface();
                         if (mPreviewSurface != null) {
+                            Log.i(TAG, "run: 11111");
                             isActive = true;
                             camera.setPreviewDisplay(mPreviewSurface);
                             camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
@@ -219,6 +222,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                         synchronized (mSync) {
                             mUVCCamera = camera;
                         }
+                        //开启推流
+                        encodeStart();
                     }
                 }
             }, 0);
@@ -296,8 +301,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                     isPreview = true;
                 }
             }
-            //开启推流
-            encodeStart();
         }
 
         @Override
@@ -310,14 +313,17 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 isPreview = false;
             }
             mPreviewSurface = null;
+            encodeStop();
         }
     };
-
+    private byte[] mBytes = new byte[H264Config.VIDEO_WIDTH * H264Config.VIDEO_HEIGHT * 3 / 2];
     private final IFrameCallback mIFrameCallback = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
-            if (mNativeStreamer != null && rtmpOpenResult != -1) {
-                mNativeStreamer.onPreviewFrame(frame.array(), H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            mBytes = new byte[frame.remaining()];
+            frame.get(mBytes, 0, mBytes.length);
+            if (isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
+                mNativeStreamer.onPreviewFrame(mBytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
             }
         }
     };

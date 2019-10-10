@@ -13,6 +13,7 @@ import android.widget.Button;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
+import com.punuo.pet.weight.PetControl;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
@@ -45,6 +46,7 @@ public class BluetoothActivity extends BaseActivity {
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
     private boolean isFirst = true;
+    private boolean run = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,37 @@ public class BluetoothActivity extends BaseActivity {
             public void onClick(View v) {
 //                startActivity(new Intent(Settings.ACTION_SETTINGS));
                 ARouter.getInstance().build("/sip/video_preview").navigation();
+            }
+        });
+        findViewById(R.id.turn_right).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                run = true;
+                new Thread() {
+                    @Override
+                    public void run() {
+//                        while (run) {
+                            PetControl.petRight();
+//                        }
+                    }
+                }.start();
+//                mBaseHandler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        run = false;
+//                    }
+//                },10 * 1000);
+            }
+        });
+        findViewById(R.id.stop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        PetControl.petStop();
+                    }
+                }.start();
             }
         });
         EventBus.getDefault().register(this);
