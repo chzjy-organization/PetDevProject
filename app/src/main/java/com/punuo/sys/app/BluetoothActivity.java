@@ -2,6 +2,7 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -12,10 +13,12 @@ import android.widget.Button;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
+import com.leplay.petwight.PetWeight;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.process.ProcessTasks;
+import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
@@ -48,6 +51,7 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
     private WifiManager mWifiManager;
     private boolean isFirst = true;
     private Button mWeight;
+    private PetWeight petWeight;
     Timer mTimer;
 
     @Override
@@ -73,26 +77,28 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
 
 //        getQuality();
         mTimer = new Timer();
-        setTimerTask();
+//        setTimerTask();
     }
 
     /**
      * 以下两个方法用来测试称重精度，测试完成后再重新修改
      */
-    public void setTimerTask(){
-        mTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                getQuality();
-            }
-        },0,1000*5);
-    }
-
-    public void getQuality(){
-//        PetWeight.clear(500);
-//        Log.i(TAG, "getQuality: "+ PetWeight.getWeight());
-        Log.i(TAG, "getQuality: " + new com.leplay.petwight.PetWeight().getWeight());
-    }
+//    public void setTimerTask(){
+//        mTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                getQuality();
+//            }
+//        },0,1000*5);
+//    }
+//
+//    public void getQuality(){
+////        PetWeight.clear(500);
+////        Log.i(TAG, "getQuality: "+ PetWeight.getWeight());
+//        petWeight =  new PetWeight();
+//        int quality = petWeight.getWeight();
+//        Log.i(TAG, "getQuality: " +quality);
+//    }
 
 
 
@@ -259,8 +265,10 @@ public class BluetoothActivity extends BaseActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.weight:
-//                Intent intent = new Intent(BluetoothActivity.this, WeighingActivity.class);
-//                startActivity(intent);
+//                ARouter.getInstance().build("/app/WeighingActivty").navigation();
+                Intent intent = new Intent(BluetoothActivity.this, WeighingActivity.class);
+                startActivity(intent);
         }
+
     }
 }

@@ -14,4 +14,5 @@ public class ServicePath {
     public static final String PATH_LOGIN = "/sip/login_response";
 
     public static final String PATH_ERROR = "/sip/error";
+    public static final String PATH_WEIGHT="/sip/weight_response";
 }

@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".Weighing.WeighingActivity"
+        <activity android:name=".weighing.WeighingActivity"
             android:screenOrientation="portrait">
         </activity>
 
