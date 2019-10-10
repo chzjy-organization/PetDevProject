@@ -6,6 +6,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -123,7 +124,7 @@ public class BluetoothActivity extends BaseActivity {
     private void serverConnectWifi(final WifiMessage wifiMessage) {
         dis = 1;
         con = 1;
-        if (WifiUtil.getConnectWifiBssid().equals(wifiMessage.BSSID)) {
+        if (TextUtils.equals(WifiUtil.getConnectWifiBssid(), wifiMessage.BSSID)) {
             PTOMessage ptoMsg = new PTOMessage();
             ptoMsg.type = Constants.SERVER;
             ptoMsg.msg = "对接设备已连接该网络";
