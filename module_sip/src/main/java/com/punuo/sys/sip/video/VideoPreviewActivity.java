@@ -4,13 +4,11 @@ import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import com.alibaba.android.arouter.facade.annotation.Route;
-import com.punuo.encode.VideoEncode;
+import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
@@ -27,8 +25,9 @@ import butterknife.ButterKnife;
 /**
  * Created by han.chen.
  * Date on 2019-09-16.
+ * 手机上测试用的
  **/
-@Route(path = "/sip/video_preview")
+//@Route(path = "/sip/video_preview")
 public class VideoPreviewActivity extends BaseActivity {
     private String TAG = "VideoPreviewActivity";
 
@@ -37,8 +36,7 @@ public class VideoPreviewActivity extends BaseActivity {
 
     private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
-    private CameraBuffer mCameraBuffer;
-//    private VideoEncodeThread mVideoEncodeThread;
+    private NativeStreamer mNativeStreamer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,16 +53,9 @@ public class VideoPreviewActivity extends BaseActivity {
     private void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        MediaRtpSender.getInstance().init();
-        mCameraBuffer = new CameraBuffer();
-        byte[] a = VideoEncode.init(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, H264Config.FRAME_RATE);
-        for (int i = 0; i < a.length; i++) {
-            System.out.println(a[i]);
-        }
-
+        mNativeStreamer = new NativeStreamer();
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(mSurfaceHolderCallback);
-
     }
 
     private void initSurfaceViewSize() {
@@ -83,7 +74,7 @@ public class VideoPreviewActivity extends BaseActivity {
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             resetCamera();
             initCamera();
-            startEncoding();
+            encodeStart();
         }
 
         @Override
@@ -125,8 +116,7 @@ public class VideoPreviewActivity extends BaseActivity {
             return;
         }
         Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewFrameRate(H264Config.FRAME_RATE);
-        parameters.setPreviewFormat(ImageFormat.YV12);
+        parameters.setPreviewFormat(ImageFormat.NV21);
         parameters.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
         parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         camera.setParameters(parameters);
@@ -136,44 +126,31 @@ public class VideoPreviewActivity extends BaseActivity {
     private Camera.PreviewCallback mPreviewCallback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-//            if (mCameraBuffer != null) {
-//                mCameraBuffer.setFrame(data);
-//            }
-            try {
-                byte[] encodeResult = VideoEncode.encode(data);
-                if (encodeResult != null && encodeResult.length > 0) {
-                    //TODO 编码成功分包发送
-                    Log.d(TAG, "编码成功");
-                    MediaRtpSender.getInstance().sendActivePacket();
-                    MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (mNativeStreamer != null && rtmpOpenResult != -1) {
+                mNativeStreamer.onPreviewFrame(data, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
             }
         }
     };
 
-    private void startEncoding() {
-        started = true;
-//        mVideoEncodeThread = new VideoEncodeThread();
-//        mVideoEncodeThread.start();
+    private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
+
+    private void encodeStart() {
+        if (mNativeStreamer != null) {
+            rtmpOpenResult = mNativeStreamer.startPublish(H264Config.RTMP_STREAM,
+                    H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+        }
     }
 
-    private void stopEncoding() {
-        started = false;
-        try {
-//            if (mVideoEncodeThread != null) {
-//                mVideoEncodeThread.interrupt();
-//            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void encodeStop() {
+        if (rtmpOpenResult != -1) {
+            mNativeStreamer.stopPublish();
         }
-//        mVideoEncodeThread = null;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        resetCamera();
     }
 
     @Override
@@ -183,50 +160,13 @@ public class VideoPreviewActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        stopEncoding();
-        MediaRtpSender.getInstance().onDestroy();
-        getWindow().getDecorView().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                VideoEncode.flush();
-                VideoEncode.close();
-            }
-        }, 500);
+        encodeStop();
         EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData data) {
         finish();
-    }
-
-    private boolean started = false;
-
-    public class VideoEncodeThread extends Thread {
-        private String TAG = "VideoEncodeThread";
-        @Override
-        public void run() {
-            if (mCameraBuffer == null) {
-                return;
-            }
-            byte[] frameData;
-            byte[] encodeResult = null;
-
-            while (started) {
-                Log.d(TAG, "开始编码");
-                frameData = mCameraBuffer.getFrame();
-                try {
-                    encodeResult = VideoEncode.encode(frameData);
-                    if (encodeResult != null && encodeResult.length > 0) {
-                        //TODO 编码成功分包发送
-                        Log.d(TAG, "编码成功");
-                        MediaRtpSender.getInstance().divideAndSendNal(encodeResult);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 }
