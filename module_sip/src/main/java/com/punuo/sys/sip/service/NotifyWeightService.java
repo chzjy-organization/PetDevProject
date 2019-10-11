@@ -23,7 +23,7 @@ public class NotifyWeightService extends NormalRequestService<WeightData> {
     protected void onSuccess(Message msg, WeightData result) {
         Log.i("successful transfer ", "重量数据成功发送到Sip服务器");
         if(result != null){
-            String quality_response = "quality = "+result.mWeightInfo.quality;
+            String quality_response = "quality = "+result.quality;
             ToastUtils.showToast(quality_response);
         }
     }

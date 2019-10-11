@@ -25,21 +25,22 @@ public class WeighingActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         mTimer = new Timer();
-        setTimerTask();
+//        setTimerTask();
+        getQuality();
         weightToSipServer();
     }
 
 
-    public void setTimerTask(){
-        mTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                getQuality();
-                Log.i("测得质量", "质量"+getQuality());
-//                weightToSipServer();//TimerTask运行在子线程，不能更新UI、跳转activity
-            }
-        },0,1000*30);
-    }
+//    public void setTimerTask(){
+//        mTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                getQuality();
+//                Log.i("测得质量", "质量"+getQuality());
+////                weightToSipServer();//TimerTask运行在子线程，不能更新UI、跳转activity
+//            }
+//        },0,1000*30);
+//    }
 
     //将数据发送到Sip服务器
     public static void weightToSipServer(){
