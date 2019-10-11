@@ -52,7 +52,7 @@ public class BluetoothActivity extends BaseActivity {
     private boolean run = true;
     private Button mWeight;
     private PetWeight petWeight;
-    Timer mTimer;
+//    Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,10 +104,16 @@ public class BluetoothActivity extends BaseActivity {
         EventBus.getDefault().register(this);
 
         mWeight = findViewById(R.id.weight);
-        mWeight.setOnClickListener(this);
+        mWeight.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(BluetoothActivity.this,WeighingActivity.class);
+                startActivity(intent);
+            }
+        });
 
 //        getQuality();
-        mTimer = new Timer();
+//        mTimer = new Timer();
 //        setTimerTask();
     }
 
