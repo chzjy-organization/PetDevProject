@@ -2,6 +2,7 @@ package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -14,10 +15,12 @@ import android.widget.Button;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
 import com.punuo.pet.weight.PetControl;
+import com.leplay.petwight.PetWeight;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.process.ProcessTasks;
+import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
@@ -47,6 +50,9 @@ public class BluetoothActivity extends BaseActivity {
     private WifiManager mWifiManager;
     private boolean isFirst = true;
     private boolean run = true;
+    private Button mWeight;
+    private PetWeight petWeight;
+    Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +102,13 @@ public class BluetoothActivity extends BaseActivity {
             }
         });
         EventBus.getDefault().register(this);
+
+        mWeight = findViewById(R.id.weight);
+        mWeight.setOnClickListener(this);
+
+//        getQuality();
+        mTimer = new Timer();
+//        setTimerTask();
     }
 
     private void init() {
