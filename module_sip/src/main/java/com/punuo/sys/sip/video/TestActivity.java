@@ -181,6 +181,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 UsbDevice usbDevice = deviceList.get(0);
                 mUSBMonitor.requestPermission(usbDevice);
             }
+            //开启推流
+            encodeStart();
         }
 
         @Override
@@ -212,7 +214,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                         }
                         mPreviewSurface = mUVCCameraView.getHolder().getSurface();
                         if (mPreviewSurface != null) {
-                            Log.i(TAG, "run: 11111");
                             isActive = true;
                             camera.setPreviewDisplay(mPreviewSurface);
                             camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
@@ -222,8 +223,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                         synchronized (mSync) {
                             mUVCCamera = camera;
                         }
-                        //开启推流
-                        encodeStart();
                     }
                 }
             }, 0);
