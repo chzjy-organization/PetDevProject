@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.sdk.util.CommonUtil;
+import com.punuo.sys.sdk.util.ToastUtils;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.serenegiant.common.BaseActivity;
@@ -87,6 +88,10 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
 
         EventBus.getDefault().register(this);
+
+        retryTimes = 0;
+        //开启推流
+        encodeStart();
     }
 
     private void initSurfaceViewSize() {
@@ -118,14 +123,34 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
+    private int retryTimes = 0;
 
     private void encodeStart() {
         if (mNativeStreamer != null) {
             rtmpOpenResult = mNativeStreamer.startPublish(H264Config.RTMP_STREAM,
                     H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-            if (rtmpOpenResult != -1) {
-                Log.i(TAG, "encodeStart: 开始推流");
-            }
+        }
+        if (rtmpOpenResult != -1) {
+            Log.i(TAG, "encodeStart: 开始推流");
+            ToastUtils.showToast("开始推流");
+        } else {
+            retryTimes++;
+            startPushError();
+        }
+    }
+
+    private void startPushError() {
+        if (retryTimes < 5) {
+            Log.i(TAG, "encodeStart: 开启推流失败,正在重试,次数: " + retryTimes + " 次");
+            queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    encodeStart();
+                }
+            }, 1000);
+        } else {
+            Log.i(TAG, "encodeStart: 失败次数过多");
+            //TODO 通知服务器推流失败,让用户尝试
         }
     }
 
@@ -181,8 +206,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 UsbDevice usbDevice = deviceList.get(0);
                 mUSBMonitor.requestPermission(usbDevice);
             }
-            //开启推流
-            encodeStart();
         }
 
         @Override
@@ -329,6 +352,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
-       finish();
+        finish();
     }
 }
