@@ -216,7 +216,7 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                         if (mPreviewSurface != null) {
                             isActive = true;
                             camera.setPreviewDisplay(mPreviewSurface);
-                            camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_NV21);
+                            camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
                             camera.startPreview();
                             isPreview = true;
                         }

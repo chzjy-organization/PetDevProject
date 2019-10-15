@@ -88,6 +88,7 @@ public class BluetoothActivity extends BaseActivity {
 //                        run = false;
 //                    }
 //                },10 * 1000);
+//                PetControl.petRight();
             }
         });
         findViewById(R.id.stop).setOnClickListener(new View.OnClickListener() {
@@ -99,6 +100,7 @@ public class BluetoothActivity extends BaseActivity {
                         PetControl.petStop();
                     }
                 }.start();
+//                PetControl.petStop();
             }
         });
         EventBus.getDefault().register(this);
@@ -115,6 +117,7 @@ public class BluetoothActivity extends BaseActivity {
 //        getQuality();
 //        mTimer = new Timer();
 //        setTimerTask();
+
     }
 
     private void init() {
