@@ -34,7 +34,6 @@ public class WeighingActivity extends BaseActivity {
 //        setTimerTask();
         getQuality();
         Log.i("wankui", "getQuality: "+new WeighingActivity().getQuality());
-        weightToSipServer();
         getGroupMember(SipConfig.getDevId());
     }
 
@@ -72,7 +71,9 @@ public class WeighingActivity extends BaseActivity {
                 if (result == null) {
                     return;
                 }
-                mMembers = result.members;
+                if (result.members != null && !result.members.isEmpty()) {
+                    weightToSipServer(result.members);
+                }
             }
 
             @Override
@@ -85,18 +86,15 @@ public class WeighingActivity extends BaseActivity {
 
 
     //将数据发送到Sip服务器
-    public static void weightToSipServer(){
-        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(new WeighingActivity().getQuality());
+    public void weightToSipServer(List<GroupMemberModel.Member> members){
+        SipGetWeightRequest getWeightRequest =
+                new SipGetWeightRequest(getQuality(), members);
         SipDevManager.getInstance().addRequest(getWeightRequest);
     }
 
-
-
     public String getQuality(){
         mPetWeight = new PetWeight();
-        String quality = mPetWeight.getWeight()+"";
-
-        return quality;
+        return String.valueOf(mPetWeight.getWeight());
     }
 
 
