@@ -1,19 +1,12 @@
 package com.punuo.sys.app.weighing.requset;
 
-import android.app.Application;
-
-import com.punuo.sys.app.process.ProcessTasks;
 import com.punuo.sys.app.weighing.WeighingActivity;
-import com.punuo.sys.sdk.PnApplication;
-import com.punuo.sys.sdk.account.AccountManager;
-import com.punuo.sys.sdk.model.UserInfo;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.request.BaseSipRequest;
 import com.punuo.sys.sip.request.SipRequestType;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.List;
 
 import fr.arnaudguyon.xmltojsonlib.JsonToXml;
 
@@ -36,7 +29,7 @@ public class SipGetWeightRequest extends BaseSipRequest {
 //        if (mWeightData == null || mWeightData.mWeightInfo == null) {
 //            return null;
 //        }
-        String devId = new ProcessTasks().getDevId();
+        String devId = SipConfig.getDevId();
 
         JSONObject body = new JSONObject();
         JSONObject value = new JSONObject();
