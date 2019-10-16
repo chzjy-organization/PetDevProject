@@ -35,6 +35,7 @@ public class WeighingActivity extends BaseActivity {
         getQuality();
         Log.i("wankui", "getQuality: "+new WeighingActivity().getQuality());
         weightToSipServer();
+        getGroupMember(new ProcessTasks().getDevId());
     }
 
 
@@ -52,43 +53,45 @@ public class WeighingActivity extends BaseActivity {
     /**
      * 根据设备id获取到群组所有的user
      */
-//    private GetGroupMemberRequest mGetGroupMemberRequest;
-//    public  ArrayList getGroupMember(String devId){
-//        ArrayList<String> arrayList = new ArrayList<>();
-//        if(mGetGroupMemberRequest != null&& mGetGroupMemberRequest.isFinished){
-//            return null;
-//        }
-//        mGetGroupMemberRequest = new GetGroupMemberRequest();
-//        mGetGroupMemberRequest.addUrlParam("devId", new ProcessTasks().getDevId());
-//        mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
-//            @Override
-//            public void onComplete() {
-//
-//            }
-//
-//            @Override
-//            public void onSuccess(GroupMemberModel result) {
-//                if(result == null){
-//                    return;
-//                }
-//                if(result.member != null){
-//                    int length = result.member.phone.size();
-//                    for(int i=0;i<length;i++){
-//                        arrayList.add(result.member.phone.get(i));
-//                    }
-//                    //TODO 目前想法：把所有绑定的设备取出作为参数传递给sip服务器
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onError(Exception e) {
-//
-//            }
-//        });
-//        HttpManager.addRequest(mGetGroupMemberRequest);
-//        return arrayList;
-//    }
+    private GetGroupMemberRequest mGetGroupMemberRequest;
+    public  ArrayList getGroupMember(String devId){
+        ArrayList<String> arrayList = new ArrayList<>();
+        if(mGetGroupMemberRequest != null&& mGetGroupMemberRequest.isFinish()){
+            return null;
+        }
+        mGetGroupMemberRequest = new GetGroupMemberRequest();
+        mGetGroupMemberRequest.addUrlParam("devid", devId);
+        mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
+            @Override
+            public void onComplete() {
+                Log.i("", "getGroupMember: "+arrayList);
+            }
+
+            @Override
+            public void onSuccess(GroupMemberModel result) {
+                if(result == null){
+                    return;
+                }
+                if(result.member != null){
+                    int length = result.member.userid.size();
+                    for(int i=0;i<length;i++){
+                        arrayList.add(result.member.userid.get(i));
+                    }
+                    //TODO 目前想法：把所有绑定的设备取出作为参数传递给sip服务器
+                }
+                Log.i("", "成功拿到userid数据");
+
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+        HttpManager.addRequest(mGetGroupMemberRequest);
+
+        return arrayList;
+    }
 
 
     //将数据发送到Sip服务器
