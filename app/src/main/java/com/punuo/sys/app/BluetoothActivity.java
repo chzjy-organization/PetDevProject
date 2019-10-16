@@ -51,7 +51,7 @@ public class BluetoothActivity extends BaseActivity {
     private boolean isFirst = true;
     private boolean run = true;
     private Button mWeight;
-    private PetWeight petWeight;
+    Turn turn = new Turn();
 //    Timer mTimer;
 
     @Override
@@ -78,7 +78,10 @@ public class BluetoothActivity extends BaseActivity {
                     @Override
                     public void run() {
 //                        while (run) {
-                            PetControl.petRight();
+                           // PetControl.petRight();
+
+
+                        turn.turnRight();
 //                        }
                     }
                 }.start();
@@ -97,8 +100,10 @@ public class BluetoothActivity extends BaseActivity {
                 new Thread() {
                     @Override
                     public void run() {
-                        PetControl.petStop();
+//                        PetControl.petStop();
+                        turn.turnStop();
                     }
+
                 }.start();
 //                PetControl.petStop();
             }

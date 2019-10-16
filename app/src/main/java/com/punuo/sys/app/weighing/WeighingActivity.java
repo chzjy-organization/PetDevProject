@@ -15,13 +15,14 @@ import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
 import com.punuo.sys.sip.SipDevManager;
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 //@Route(path="/app/WeighingActivty")
 public class WeighingActivity extends BaseActivity {
 
-    private PetWeight mPetWeight;
+    private com.leplay.petwight.PetWeight mPetWeight;
 
     Timer mTimer;
 
@@ -51,39 +52,43 @@ public class WeighingActivity extends BaseActivity {
     /**
      * 根据设备id获取到群组所有的user
      */
-    private GetGroupMemberRequest mGetGroupMemberRequest;
-    public void getGroupMember(String devId){
-        if(mGetGroupMemberRequest != null&& mGetGroupMemberRequest.isFinished){
-            return;
-        }
-        mGetGroupMemberRequest = new GetGroupMemberRequest();
-        mGetGroupMemberRequest.addUrlParam("devId", new ProcessTasks().getDevId());
-        mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
-            @Override
-            public void onComplete() {
-
-            }
-
-            @Override
-            public void onSuccess(GroupMemberModel result) {
-                if(result == null){
-                    return;
-                }
-                if(result.member != null){
-//                    for(int i=0;i<result.member.phone.size();i++){
+//    private GetGroupMemberRequest mGetGroupMemberRequest;
+//    public  ArrayList getGroupMember(String devId){
+//        ArrayList<String> arrayList = new ArrayList<>();
+//        if(mGetGroupMemberRequest != null&& mGetGroupMemberRequest.isFinished){
+//            return null;
+//        }
+//        mGetGroupMemberRequest = new GetGroupMemberRequest();
+//        mGetGroupMemberRequest.addUrlParam("devId", new ProcessTasks().getDevId());
+//        mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
+//            @Override
+//            public void onComplete() {
 //
+//            }
+//
+//            @Override
+//            public void onSuccess(GroupMemberModel result) {
+//                if(result == null){
+//                    return;
+//                }
+//                if(result.member != null){
+//                    int length = result.member.phone.size();
+//                    for(int i=0;i<length;i++){
+//                        arrayList.add(result.member.phone.get(i));
 //                    }
-                    //TODO 目前想法：把所有绑定的设备取出作为参数传递给sip服务器
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-
-            }
-        });
-        HttpManager.addRequest(mGetGroupMemberRequest);
-    }
+//                    //TODO 目前想法：把所有绑定的设备取出作为参数传递给sip服务器
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onError(Exception e) {
+//
+//            }
+//        });
+//        HttpManager.addRequest(mGetGroupMemberRequest);
+//        return arrayList;
+//    }
 
 
     //将数据发送到Sip服务器
@@ -92,35 +97,11 @@ public class WeighingActivity extends BaseActivity {
         SipDevManager.getInstance().addRequest(getWeightRequest);
     }
 
-//    private void sipWeightToServer(){
-//        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest();
-//        getWeightRequest.setSipRequestListener(new SipRequestListener<WeightData>() {
-//            @Override
-//            public void onComplete() {
-//
-//            }
-//
-//            @Override
-//            public void onSuccess(WeightData result) {
-//                if(result == null){
-//                    return;
-//                }
-//                Log.i("11111", "onSuccess: "+"成功");
-//            }
-//
-//
-//            @Override
-//            public void onError(Exception e) {
-//                HandlerExceptionUtils.handleException(e);
-//            }
-//        });
-//        SipDevManager.getInstance().addRequest(getWeightRequest);
-//    }
 
 
-    public int getQuality(){
+    public String getQuality(){
         mPetWeight = new PetWeight();
-        int quality = mPetWeight.getWeight();
+        String quality = mPetWeight.getWeight()+"";
 
         return quality;
     }

@@ -3,6 +3,7 @@ package com.punuo.sys.app.weighing.requset;
 import android.app.Application;
 
 import com.punuo.sys.app.process.ProcessTasks;
+import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.account.AccountManager;
 import com.punuo.sys.sdk.model.UserInfo;
@@ -19,9 +20,11 @@ import fr.arnaudguyon.xmltojsonlib.JsonToXml;
 public class SipGetWeightRequest extends BaseSipRequest {
 
 //    private WeightData mWeightData;
-    private int mQuality;
+    private String mQuality;
+    private WeighingActivity weighingActivity;
+    private int userid = 10003;
 
-    public SipGetWeightRequest(int quality){
+    public SipGetWeightRequest(String quality){
         setSipRequestType(SipRequestType.Notify);
         setTargetResponse("weight_response");
         mQuality = quality;
@@ -33,13 +36,19 @@ public class SipGetWeightRequest extends BaseSipRequest {
 //        if (mWeightData == null || mWeightData.mWeightInfo == null) {
 //            return null;
 //        }
+        String devId = new ProcessTasks().getDevId();
 
         JSONObject body = new JSONObject();
         JSONObject value = new JSONObject();
 
         try {
             value.put("quality",mQuality);
-            value.put("from",new ProcessTasks().getDevId());
+            value.put("userid",userid);
+//            value.put("from",devId);
+//            int length = weighingActivity.getGroupMember(devId).size();
+//            for(int i=0;i<length;i++){
+//                value.put("to",weighingActivity.getGroupMember(devId).get(i));
+//            }
             body.put("weight",value);
         } catch (JSONException e) {
             e.printStackTrace();

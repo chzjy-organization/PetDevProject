@@ -6,11 +6,11 @@ import com.punuo.sys.sdk.model.BaseModel;
 import java.util.List;
 
 public class GroupMemberModel extends BaseModel {
-    @SerializedName("groupmember")
+    @SerializedName("member")
     public Member member;
 
     public static class Member{
-        @SerializedName("member")
+        @SerializedName("phone")
         public List<String> phone;
     }
 }

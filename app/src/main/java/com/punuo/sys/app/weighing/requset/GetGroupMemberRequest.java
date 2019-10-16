@@ -6,6 +6,6 @@ public class GetGroupMemberRequest extends BaseRequest {
 
     public GetGroupMemberRequest(){
         setRequestPath("/pets/");
-        setRequestType(RequestType.POST);
+        setRequestType(RequestType.GET);
     }
 }
