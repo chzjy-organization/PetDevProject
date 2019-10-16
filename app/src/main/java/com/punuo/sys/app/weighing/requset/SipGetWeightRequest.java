@@ -19,7 +19,6 @@ public class SipGetWeightRequest extends BaseSipRequest {
     private String mQuality;
     private StringBuilder mUserTo;
     private WeighingActivity weighingActivity;
-    private int userid = 10003;
 
     public SipGetWeightRequest(String quality, List<GroupMemberModel.Member> members){
         setSipRequestType(SipRequestType.Notify);
@@ -46,7 +45,6 @@ public class SipGetWeightRequest extends BaseSipRequest {
 
         try {
             value.put("quality", mQuality);
-            value.put("userid", userid);
             value.put("from", devId);
             value.put("to", mUserTo);
             body.put("weight", value);
