@@ -7,5 +7,10 @@ import java.util.List;
 
 public class GroupMemberModel extends BaseModel {
     @SerializedName("userids")
-    public List<String> members;
+    public List<Member> members;
+
+    public static class Member{
+        @SerializedName("userid")
+        public String userid;
+    }
 }

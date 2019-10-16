@@ -24,7 +24,7 @@ public class WeighingActivity extends BaseActivity {
 
     Timer mTimer;
 
-    private List<String> mMembers = new ArrayList<>();
+    private List<GroupMemberModel.Member> mMembers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
