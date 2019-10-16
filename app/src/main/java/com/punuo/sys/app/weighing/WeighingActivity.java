@@ -54,7 +54,8 @@ public class WeighingActivity extends BaseActivity {
      * 根据设备id获取到群组所有的user
      */
     private GetGroupMemberRequest mGetGroupMemberRequest;
-    public  void getGroupMember(String devId){
+
+    public void getGroupMember(String devId) {
         if (mGetGroupMemberRequest != null && !mGetGroupMemberRequest.isFinish()) {
             return;
         }
@@ -63,7 +64,7 @@ public class WeighingActivity extends BaseActivity {
         mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
             @Override
             public void onComplete() {
-                Log.i("", "getGroupMember: " + mMembers);
+                Log.i("wankui", "getGroupMember: " + mMembers);
             }
 
             @Override
