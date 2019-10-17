@@ -15,6 +15,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 开机启动所需权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
 
     <uses-feature
@@ -43,11 +45,9 @@
                 <!-- <category android:name="android.intent.category.HOME" /> -->
             </intent-filter>
         </activity>
-
         <activity
             android:name=".weighing.WeighingActivity"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait"></activity>
 
         <receiver
             android:name=".led.ButtonBroadcast"
@@ -55,6 +55,15 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.petrobot.action.WIFIBT_KEY" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".AutoStartReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.HOME"/>
             </intent-filter>
         </receiver>
     </application>
