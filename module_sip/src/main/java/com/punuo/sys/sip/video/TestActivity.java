@@ -90,8 +90,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         EventBus.getDefault().register(this);
 
         retryTimes = 0;
-        //开启推流
-        encodeStart();
     }
 
     private void initSurfaceViewSize() {
@@ -247,6 +245,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                             mUVCCamera = camera;
                         }
                     }
+                    //开启推流
+                    encodeStart();
                 }
             }, 0);
         }
