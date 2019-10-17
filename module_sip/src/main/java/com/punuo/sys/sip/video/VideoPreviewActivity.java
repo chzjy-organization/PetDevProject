@@ -8,7 +8,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
@@ -28,7 +27,7 @@ import butterknife.ButterKnife;
  * Date on 2019-09-16.
  * 手机上测试用的
  **/
-@Route(path = "/sip/video_preview")
+//@Route(path = "/sip/video_preview")
 public class VideoPreviewActivity extends BaseActivity {
     private String TAG = "VideoPreviewActivity";
 
