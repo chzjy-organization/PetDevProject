@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -35,7 +36,7 @@ public class WifiController {
             return;
         }
         mWifiMessage = wifiMessage;
-        if (WifiUtil.getConnectWifiBssid().equals(mWifiMessage.BSSID)) {
+        if (TextUtils.equals(WifiUtil.getConnectWifiBssid(),mWifiMessage.BSSID)) {
             mWifiManager.disconnect();
         }
         mWifiStateReceiver = new WifiStateReceiver();

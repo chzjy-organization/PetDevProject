@@ -1,8 +1,12 @@
 package com.punuo.sys.app;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -11,6 +15,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
@@ -19,6 +24,8 @@ import com.leplay.petwight.PetWeight;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
+import com.punuo.sys.app.led.LedControl;
+import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
 import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
@@ -37,6 +44,10 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+
 /**
  * Created by han.chen.
  * Date on 2019-08-17.
@@ -52,6 +63,9 @@ public class BluetoothActivity extends BaseActivity {
     private boolean run = true;
     private Button mWeight;
     private PetWeight petWeight;
+    private LedControl ledControl;
+    private IntentFilter intentFilter;
+    private NetworkChangeReceiver networkChangeReceiver;
 //    Timer mTimer;
 
     @Override
@@ -62,6 +76,11 @@ public class BluetoothActivity extends BaseActivity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothChatService = BluetoothChatService.getInstance(this, mBaseHandler);
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        ledControl=new LedControl();
+        intentFilter=new IntentFilter();
+        intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        networkChangeReceiver=new NetworkChangeReceiver();
+        registerReceiver(networkChangeReceiver,intentFilter);
         Button setting = findViewById(R.id.setting);
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,7 +136,6 @@ public class BluetoothActivity extends BaseActivity {
 //        getQuality();
 //        mTimer = new Timer();
 //        setTimerTask();
-
     }
 
     private void init() {
@@ -256,6 +274,54 @@ public class BluetoothActivity extends BaseActivity {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(LedData ledData) {
+        if(ledData.k==1){
+            spark();
+        }
+        }
+
+    class NetworkChangeReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context,Intent intent){
+            ConnectivityManager connectivityManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
+            if(networkInfo!=null&&networkInfo.isAvailable()){
+                ledControl.turnOnCustom1Light();
+            }else {
+                Toast.makeText(BluetoothActivity.this,"networkchange",Toast.LENGTH_SHORT).show();
+                ledControl.turnOffCustom1Light();
+            }
+        }
+    }
+    private int clo=0;
+    public void spark(){
+        Timer timer=new Timer();
+        ConnectivityManager connectivityManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo=connectivityManager.getActiveNetworkInfo();
+        TimerTask taskcc=new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        if (clo == 0) {
+                            clo = 1;
+                            ledControl.turnOnCustom1Light();
+                        } else {
+                            if (clo == 1) {
+                                clo = 0;
+                                if(networkInfo!=null&&networkInfo.isAvailable()){
+                                    ledControl.turnOnCustom1Light();
+                                }
+                                else{ ledControl.turnOffCustom1Light();}
+                            }
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(taskcc, 1, 300);
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -270,5 +336,6 @@ public class BluetoothActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+        unregisterReceiver(networkChangeReceiver);
     }
 }
