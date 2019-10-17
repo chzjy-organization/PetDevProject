@@ -90,6 +90,8 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
         EventBus.getDefault().register(this);
 
         retryTimes = 0;
+        //开启推流
+        encodeStart();
     }
 
     private void initSurfaceViewSize() {
@@ -245,8 +247,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                             mUVCCamera = camera;
                         }
                     }
-                    //开启推流
-                    encodeStart();
                 }
             }, 0);
         }
@@ -335,7 +335,6 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
                 isPreview = false;
             }
             mPreviewSurface = null;
-            encodeStop();
         }
     };
     private byte[] mBytes = new byte[H264Config.VIDEO_WIDTH * H264Config.VIDEO_HEIGHT * 3 / 2];
@@ -352,6 +351,12 @@ public class TestActivity extends BaseActivity implements CameraDialog.CameraDia
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
-        finish();
+        encodeStop();
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, 100);
     }
 }
