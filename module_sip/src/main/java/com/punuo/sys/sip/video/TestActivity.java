@@ -35,7 +35,6 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sdk.util.ToastUtils;
@@ -56,7 +55,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-@Route(path = "/sip/video_preview")
+//@Route(path = "/sip/video_preview")
 public class TestActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final boolean DEBUG = true;    // TODO set false when production
     private static final String TAG = "TestActivity";
