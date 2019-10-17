@@ -3,6 +3,7 @@ package com.punuo.sys.sip.service;
 import android.util.Log;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.request.BaseSipRequest;
 
@@ -44,7 +45,11 @@ public class QueryService extends NormalRequestService<String> {
     @Override
     protected void onSuccess(Message msg, String result) {
         Log.d("han.chen", "Query 收到视频请求");
-        onResponse(msg);
+        if (result != null) {
+            onResponse(msg);
+            ARouter.getInstance().build("/sip/video_preview")
+                    .navigation();
+        }
     }
 
     @Override

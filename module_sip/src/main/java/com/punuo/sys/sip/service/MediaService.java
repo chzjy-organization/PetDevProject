@@ -3,7 +3,6 @@ package com.punuo.sys.sip.service;
 import android.util.Log;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
-import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.MediaData;
 import com.punuo.sys.sip.request.BaseSipRequest;
@@ -27,8 +26,6 @@ public class MediaService extends NormalRequestService<MediaData> {
         Log.d("han.chen", "Media 收到视频请求");
         if (result != null) {
             onResponse(msg);
-            ARouter.getInstance().build("/sip/video_preview")
-                    .navigation();
         }
     }
 
