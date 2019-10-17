@@ -14,13 +14,13 @@ import android.widget.Button;
 
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.alibaba.fastjson.JSON;
-import com.punuo.pet.weight.PetControl;
-import com.leplay.petwight.PetWeight;
+import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.process.ProcessTasks;
 import com.punuo.sys.app.weighing.WeighingActivity;
+import com.punuo.sys.app.weighing.tool.WeightReset;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
@@ -51,7 +51,8 @@ public class BluetoothActivity extends BaseActivity {
     private boolean isFirst = true;
     private boolean run = true;
     private Button mWeight;
-    Turn turn = new Turn();
+    private Button mReset;
+    TurnAndStop turn = new TurnAndStop();
 //    Timer mTimer;
 
     @Override
@@ -122,6 +123,15 @@ public class BluetoothActivity extends BaseActivity {
 //        getQuality();
 //        mTimer = new Timer();
 //        setTimerTask();
+
+        findViewById(R.id.reset).setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                WeightReset weightReset = new WeightReset();
+                weightReset.reset();
+            }
+        }
+        );
 
     }
 

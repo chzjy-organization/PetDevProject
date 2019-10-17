@@ -53,7 +53,8 @@ public class WeighingActivity extends BaseActivity {
      * 根据设备id获取到群组所有的user
      */
     private GetGroupMemberRequest mGetGroupMemberRequest;
-    public  void getGroupMember(String devId){
+
+    public void getGroupMember(String devId) {
         if (mGetGroupMemberRequest != null && !mGetGroupMemberRequest.isFinish()) {
             return;
         }
@@ -70,9 +71,9 @@ public class WeighingActivity extends BaseActivity {
                 if (result == null) {
                     return;
                 }
-                mMembers = result.members;
-                SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(new WeighingActivity().getQuality(),mMembers);
-                SipDevManager.getInstance().addRequest(getWeightRequest);
+                if (result.members != null && !result.members.isEmpty()) {
+                    weightToSipServer(result.members);
+                }
             }
 
             @Override
@@ -85,17 +86,15 @@ public class WeighingActivity extends BaseActivity {
 
 
     //将数据发送到Sip服务器
-//    public static void weightToSipServer(){
-//        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(new WeighingActivity().getQuality());
-//        SipDevManager.getInstance().addRequest(getWeightRequest);
-//    }
-
-
+    public void weightToSipServer(List<GroupMemberModel.Member> members){
+        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(getQuality(), members);
+        SipDevManager.getInstance().addRequest(getWeightRequest);
+        Log.i("wankui", "发送成功: ");
+    }
 
     public String getQuality(){
         mPetWeight = new PetWeight();
         String quality = mPetWeight.getWeight()+"";
-
         return quality;
     }
 
