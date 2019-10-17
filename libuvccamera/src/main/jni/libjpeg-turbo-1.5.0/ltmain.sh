@@ -1259,7 +1259,7 @@ func_show_eval_locale ()
 
 # func_tr_sh
 # ----------
-# Turn $1 into a string suitable for a shell variable name.
+# com.punuo.sys.app.Turn $1 into a string suitable for a shell variable name.
 # Result is stored in $func_tr_sh_result.  All characters
 # not in the set a-zA-Z0-9_ are replaced with '_'. Further,
 # if $1 begins with a digit, a '_' is prepended as well.

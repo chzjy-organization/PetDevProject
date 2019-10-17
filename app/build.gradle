@@ -24,7 +24,7 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi-v7a","arm64-v8a","x86","x86_64"
+            abiFilters "armeabi-v7a","armeabi-v7a", "x86", "x86_64"
         }
     }
     buildTypes {
@@ -60,7 +60,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':basesdk')
     implementation project(':module_sip')
     implementation files('libs/PetWeight.jar')
