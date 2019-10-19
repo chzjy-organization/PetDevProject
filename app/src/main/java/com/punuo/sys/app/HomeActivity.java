@@ -43,7 +43,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -70,6 +69,7 @@ import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.event.ReRegisterEvent;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.RecvaddrData;
+import com.punuo.sys.sip.model.VideoData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.video.H264Config;
 import com.serenegiant.common.BaseActivity;
@@ -106,9 +106,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
-    private boolean isFirst = true;
-    private Button mWeight;
-    private Button mReset;
     private TurnAndStop turn = new TurnAndStop();
     private LedControl ledControl;
     private IntentFilter intentFilter;
@@ -141,8 +138,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
         EventBus.getDefault().register(this);
         retryTimes = 0;
-        //开启推流
-        encodeStart();
 
         findViewById(R.id.turn_right).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -166,8 +161,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 }.start();
             }
         });
-        mWeight = findViewById(R.id.weight);
-        mWeight.setOnClickListener(new View.OnClickListener(){
+        findViewById(R.id.weight).setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(HomeActivity.this, WeighingActivity.class);
@@ -198,20 +192,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         if (!WifiUtil.isWifiEnable(mWifiManager)) {
             mWifiManager.setWifiEnabled(true);
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (DEBUG) Log.v(TAG, "onStart:");
-        synchronized (mSync) {
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        if (DEBUG) Log.v(TAG, "onStop:");
-        super.onStop();
     }
 
     private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
@@ -410,13 +390,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             mPreviewSurface = null;
         }
     };
+    private boolean started = false;
     private byte[] mBytes = new byte[H264Config.VIDEO_WIDTH * H264Config.VIDEO_HEIGHT * 3 / 2];
-    private final IFrameCallback mIFrameCallback = new IFrameCallback() {
+    private IFrameCallback mIFrameCallback = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
             mBytes = new byte[frame.remaining()];
             frame.get(mBytes, 0, mBytes.length);
-            if (isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
+            if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
                 mNativeStreamer.onPreviewFrame(mBytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
             }
         }
@@ -424,13 +405,20 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
-        encodeStop();
+        started = false;
+        ToastUtils.showToast("停止推流");
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                finish();
+                encodeStop();
             }
-        }, 100);
+        }, 1000);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(VideoData videoData) {
+        encodeStart();
+        started = true;
     }
 
     @Override
@@ -610,6 +598,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         }
     }
 
+    private boolean isFirst = true;
     @Override
     protected void onResume() {
         super.onResume();

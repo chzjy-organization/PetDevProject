@@ -16,13 +16,6 @@
         android:layout_alignParentBottom="true">
 
         <Button
-            android:id="@+id/setting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="设置1" />
-
-        <Button
             android:id="@+id/turn_right"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
