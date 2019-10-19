@@ -240,7 +240,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 mUVCCamera = null;
             }
             if (mUSBMonitor != null) {
-                mUSBMonitor.unregister();
                 mUSBMonitor.destroy();
                 mUSBMonitor = null;
             }
@@ -263,7 +262,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
         @Override
         public void onConnect(final UsbDevice device, final UsbControlBlock ctrlBlock, final boolean createNew) {
-            ToastUtils.showToast("摄像头链接成功");
             synchronized (mSync) {
                 if (mUVCCamera != null) {
                     mUVCCamera.destroy();
@@ -417,6 +415,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(VideoData videoData) {
+        if (started) {
+            return;
+        }
         encodeStart();
         started = true;
     }
@@ -584,7 +585,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         timer.schedule(taskcc, 1, 300);
     }
 
-    class NetworkChangeReceiver extends BroadcastReceiver {
+    public class NetworkChangeReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -592,7 +593,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             if (networkInfo != null && networkInfo.isAvailable()) {
                 ledControl.turnOnCustom1Light();
             } else {
-                ToastUtils.showToast("networkchange");
                 ledControl.turnOffCustom1Light();
             }
         }
@@ -609,6 +609,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             init();
             registerDev();
             isFirst = false;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mUSBMonitor != null) {
+            mUSBMonitor.unregister();
         }
     }
 }
