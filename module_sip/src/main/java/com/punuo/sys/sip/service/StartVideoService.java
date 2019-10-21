@@ -3,12 +3,12 @@ package com.punuo.sys.sip.service;
 import android.text.TextUtils;
 
 import com.alibaba.android.arouter.facade.annotation.Route;
-import com.alibaba.android.arouter.launcher.ARouter;
 import com.punuo.sys.sdk.util.HandlerExceptionUtils;
 import com.punuo.sys.sip.model.VideoData;
 import com.punuo.sys.sip.request.BaseSipRequest;
 import com.punuo.sys.sip.video.H264Config;
 
+import org.greenrobot.eventbus.EventBus;
 import org.zoolu.sip.message.Message;
 
 /**
@@ -29,8 +29,7 @@ public class StartVideoService extends NormalRequestService<VideoData> {
         }
         onResponse(msg);
         H264Config.RTMP_STREAM = TextUtils.isEmpty(result.mVideoUrl) ? H264Config.RTMP_STREAM : result.mVideoUrl;
-        ARouter.getInstance().build("/sip/video_preview")
-                .navigation();
+        EventBus.getDefault().post(result);
     }
 
     @Override
