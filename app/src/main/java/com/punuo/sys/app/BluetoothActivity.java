@@ -340,6 +340,14 @@ public class BluetoothActivity extends BaseActivity {
         };
         timer.schedule(taskcc, 1, 300);
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void feedNow(String feedCount){
+        turn.turnRight();
+        //TODO 还未完善，需要根据服务器返回的喂食份数来确定旋转多长时间
+    }
+
+
     @Override
     protected void onResume() {
         super.onResume();
