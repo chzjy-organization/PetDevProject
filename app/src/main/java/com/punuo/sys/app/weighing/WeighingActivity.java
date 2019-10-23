@@ -89,7 +89,7 @@ public class WeighingActivity extends BaseActivity {
     public void weightToSipServer(List<GroupMemberModel.Member> members){
         SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(getQuality(), members);
         SipDevManager.getInstance().addRequest(getWeightRequest);
-        Log.i("wankui", "发送成功: ");
+        Log.i("wankui", "称重信息发送中...... ");
     }
 
     public String getQuality(){
