@@ -26,5 +26,5 @@ public class H264Config {
     /**
      * Default video rtmp address
      */
-    public final static String RTMP_STREAM = "rtmp://101.69.255.130:1936/hls/live";
+    public static String RTMP_STREAM = "rtmp://101.69.255.130:1936/hls/live";
 }

@@ -36,7 +36,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".BluetoothActivity"
+            android:name=".HomeActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,8 +49,7 @@
         </activity>
         <activity
             android:name=".weighing.WeighingActivity"
-            android:screenOrientation="portrait" />
-
+            android:screenOrientation="portrait"/>
         <receiver
             android:name=".led.ButtonBroadcast"
             android:enabled="true"

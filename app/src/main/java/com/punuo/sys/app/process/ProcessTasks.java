@@ -70,7 +70,7 @@ public class ProcessTasks {
 
             @Override
             public String getDevId() {
-                return "310023001301920001";//310023001139940001
+                return "310023005801930001";//310023001139940001
             }
 
             @Override
@@ -93,12 +93,5 @@ public class ProcessTasks {
         });
         SipDevManager.setContext(app);
         new SipInitThread().start();
-    }
-
-    /**
-     * 用于测试称重，发送设备号
-     */
-    public String getDevId(){
-        return "310023001301920001";
     }
 }

@@ -29,4 +29,9 @@
         android:layout_height="wrap_content"
         android:text="称重"/>
 
+    <Button
+        android:id="@+id/reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="置零"/>
 </LinearLayout>

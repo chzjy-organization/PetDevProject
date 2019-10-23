@@ -7,7 +7,7 @@ public class WeightData {
 //    public WeightInfo mWeightInfo;
 
     @SerializedName("quality")
-    public int quality;
+    public String quality;
     public static class WeightInfo{
     }
 }
