@@ -111,6 +111,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private IntentFilter intentFilter;
     private NetworkChangeReceiver networkChangeReceiver;
     private BaseHandler mBaseHandler;
+    private FeedButtonReceiver feedButtonReceiver;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -127,8 +128,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         ledControl = new LedControl();
         intentFilter = new IntentFilter();
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        intentFilter.addAction("android.petrobot.action.FEED_KEY");
         networkChangeReceiver = new NetworkChangeReceiver();
         registerReceiver(networkChangeReceiver, intentFilter);
+        feedButtonReceiver = new FeedButtonReceiver();
+        registerReceiver(feedButtonReceiver,intentFilter);
 
 
         mNativeStreamer = new NativeStreamer();
@@ -247,6 +251,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView = null;
         EventBus.getDefault().unregister(this);
         unregisterReceiver(networkChangeReceiver);
+        unregisterReceiver(feedButtonReceiver);
         super.onDestroy();
     }
 
@@ -596,6 +601,31 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 ledControl.turnOffCustom1Light();
             }
         }
+    }
+
+    public class FeedButtonReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ToastUtils.showToast("开始喂食啦！ ");
+            new Thread(){
+                @Override
+                public void run() {
+                    turn.turnRight();
+                }
+            }.start();
+            //TODO 需要对云台旋转进行时间控制，尚未完成
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void feedNow(String feedCount){
+        new Thread(){
+            @Override
+            public void run() {
+                turn.turnRight();
+            }
+        }.start();
+        //TODO 还未完善，需要根据服务器返回的喂食份数来确定旋转多长时间
     }
 
     private boolean isFirst = true;
