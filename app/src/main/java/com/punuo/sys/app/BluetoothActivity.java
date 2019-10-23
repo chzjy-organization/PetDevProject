@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
@@ -35,6 +36,7 @@ import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.activity.BaseActivity;
+import com.punuo.sys.sdk.util.ToastUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
 import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.event.ReRegisterEvent;
@@ -69,7 +71,7 @@ public class BluetoothActivity extends BaseActivity {
     private LedControl ledControl;
     private IntentFilter intentFilter;
     private NetworkChangeReceiver networkChangeReceiver;
-//    Timer mTimer;
+    private FeedButtonReceiver feedButtonReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +81,16 @@ public class BluetoothActivity extends BaseActivity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothChatService = BluetoothChatService.getInstance(this, mBaseHandler);
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
         ledControl=new LedControl();
         intentFilter=new IntentFilter();
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        intentFilter.addAction("android.petrobot.action.FEED_KEY");
         networkChangeReceiver=new NetworkChangeReceiver();
         registerReceiver(networkChangeReceiver,intentFilter);
+        feedButtonReceiver = new FeedButtonReceiver();
+        registerReceiver(feedButtonReceiver,intentFilter);
+
         Button setting = findViewById(R.id.setting);
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -346,6 +353,16 @@ public class BluetoothActivity extends BaseActivity {
         turn.turnRight();
         //TODO 还未完善，需要根据服务器返回的喂食份数来确定旋转多长时间
     }
+
+    class FeedButtonReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ToastUtils.showToast("开始喂食啦！ ");
+            turn.turnRight();
+            //TODO 需要对云台旋转进行时间控制，尚未完成
+        }
+    }
+
 
 
     @Override

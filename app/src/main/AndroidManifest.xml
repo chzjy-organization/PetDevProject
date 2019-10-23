@@ -65,6 +65,13 @@
                 <category android:name="android.intent.category.HOME"/>
             </intent-filter>
         </receiver>
+        <receiver android:name=".feed.FeedBroadcast"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.petrobot.action.FEED_KEY"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
