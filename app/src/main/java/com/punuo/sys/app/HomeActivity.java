@@ -34,6 +34,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.text.TextUtils;
@@ -46,6 +47,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.leplay.petwight.PetWeight;
 import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
@@ -55,19 +57,25 @@ import com.punuo.sys.app.feed.FeedData;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
-import com.punuo.sys.app.weighing.WeighingActivity;
+import com.punuo.sys.app.weighing.requset.GetGroupMemberRequest;
+import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
+import com.punuo.sys.app.weighing.tool.GroupMemberModel;
 import com.punuo.sys.app.weighing.tool.WeightReset;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
+import com.punuo.sys.sdk.httplib.HttpManager;
+import com.punuo.sys.sdk.httplib.RequestListener;
 import com.punuo.sys.sdk.util.BaseHandler;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sdk.util.ToastUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
 import com.punuo.sys.sip.SipDevManager;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.event.ReRegisterEvent;
+import com.punuo.sys.sip.model.FeedNotifyData;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.VideoData;
@@ -86,6 +94,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -112,7 +121,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private IntentFilter intentFilter;
     private NetworkChangeReceiver networkChangeReceiver;
     private BaseHandler mBaseHandler;
-//    private FeedButtonReceiver feedButtonReceiver;
+    private PetWeight mPetWeight;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -166,8 +175,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         findViewById(R.id.weight).setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(HomeActivity.this, WeighingActivity.class);
-                startActivity(intent);
+                getQuality();
+                getGroupMember(SipConfig.getDevId());
             }
         });
         findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
@@ -177,6 +186,55 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 weightReset.reset();
             }
         });
+    }
+
+
+    public String getQuality(){
+        mPetWeight = new PetWeight();
+        String quality = mPetWeight.getWeight()+"";
+        return quality;
+    }
+
+    /**
+     * 根据设备id获取到群组所有的user
+     */
+    private GetGroupMemberRequest mGetGroupMemberRequest;
+    private List<GroupMemberModel.Member> mMembers = new ArrayList<>();
+    public void getGroupMember(String devId) {
+        if (mGetGroupMemberRequest != null && !mGetGroupMemberRequest.isFinish()) {
+            return;
+        }
+        mGetGroupMemberRequest = new GetGroupMemberRequest();
+        mGetGroupMemberRequest.addUrlParam("devid", devId);
+        mGetGroupMemberRequest.setRequestListener(new RequestListener<GroupMemberModel>() {
+            @Override
+            public void onComplete() {
+                Log.i("weight", "getGroupMember: " + mMembers);
+            }
+
+            @Override
+            public void onSuccess(GroupMemberModel result) {
+                if (result == null) {
+                    return;
+                }
+                if (result.members != null && !result.members.isEmpty()) {
+                    weightToSipServer(result.members);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+        HttpManager.addRequest(mGetGroupMemberRequest);
+    }
+
+    //将数据发送到Sip服务器
+    public void weightToSipServer(List<GroupMemberModel.Member> members){
+        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(getQuality(), members);
+        SipDevManager.getInstance().addRequest(getWeightRequest);
+        Log.i("weight", "称重信息发送中...... ");
     }
 
     private void initSurfaceViewSize() {
@@ -602,28 +660,55 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void feedNow(String feedCount){
-        new Thread(){
-            @Override
-            public void run() {
-                turn.turnRight();
-            }
-        }.start();
-        //TODO 还未完善，需要根据服务器返回的喂食份数来确定旋转多长时间
+    public void feedNow(FeedNotifyData result){
+        ToastUtils.showToast("收到喂食请求");
+        Log.i("feed", "feedcount"+result.feedCount);
+
+        String count = result.feedCount;
+
+//        取出收到字符串中的第一个数字(正则)
+//        Pattern p = Pattern.compile("\\d+");
+//        Matcher m = p.matcher(count);
+//        m.find();
+//        int currentCount = Integer.parseInt(m.group());
+//        String count1 = count.substring(0,1);//取出收到字符串的第一个字符
+        int currentCount = Integer.parseInt(count);
+
+        Log.i("feed", "currentCount: "+currentCount);
+        if(currentCount>0){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    turn.turnRight();
+                    try {
+                        Thread.sleep(currentCount*10*1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    turn.turnStop();
+                }
+            }).start();
+        }
+        //TODO 还未完善，需要根据数据调整旋转时间
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void feedNowDev(FeedData feedData){
-        if(feedData.key==714){
-            new Thread(){
-                @Override
-                public void run() {
-                    //TODO 还未完善，需要根据服务器返回的喂食份数来确定旋转多长时间
-                    turn.turnRight();
+    public void feedNowButton(FeedData feedData){
+        //默认喂食30s
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                turn.turnRight();
+                try {
+                    Thread.sleep(30*1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            }.start();
-        }
+                turn.turnStop();
+            }
+        }).start();
     }
+
 
     private boolean isFirst = true;
     @Override

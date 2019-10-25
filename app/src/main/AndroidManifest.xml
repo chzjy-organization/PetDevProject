@@ -45,9 +45,7 @@
                 <!-- <category android:name="android.intent.category.HOME" /> -->
             </intent-filter>
         </activity>
-        <activity
-            android:name=".weighing.WeighingActivity"
-            android:screenOrientation="portrait"/>
+
         <receiver
             android:name=".led.ButtonBroadcast"
             android:enabled="true"

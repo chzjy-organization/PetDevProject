@@ -20,8 +20,9 @@ public class FeedNowService extends NormalRequestService<FeedNotifyData> {
 
     @Override
     protected void onSuccess(Message msg, FeedNotifyData result) {
-        String feedCount = result.feedCount;
-        EventBus.getDefault().post(feedCount);
+        ToastUtils.showToast("收到sip请求");
+//        String feedCount = result.feedCount;
+        EventBus.getDefault().post(result);
     }
 
     @Override
