@@ -1,6 +1,5 @@
 package com.punuo.sys.app.weighing.requset;
 
-import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.app.weighing.tool.GroupMemberModel;
 import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.request.BaseSipRequest;
@@ -18,7 +17,6 @@ public class SipGetWeightRequest extends BaseSipRequest {
 //    private WeightData mWeightData;
     private String mQuality;
     private StringBuilder mUserTo;
-    private WeighingActivity weighingActivity;
 
     public SipGetWeightRequest(String quality, List<GroupMemberModel.Member> members){
         setSipRequestType(SipRequestType.Notify);
