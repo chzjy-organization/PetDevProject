@@ -16,11 +16,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!-- 开机启动所需权限 -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
-
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- 开机启动所需权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
     <uses-feature
         android:glEsVersion="0x00020000"
         android:required="true" />
@@ -35,6 +32,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".HomeActivity"
             android:screenOrientation="portrait">
@@ -42,14 +40,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
 
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.MONKEY" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <!-- <category android:name="android.intent.category.HOME" /> -->
             </intent-filter>
         </activity>
         <activity
             android:name=".weighing.WeighingActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
+
         <receiver
             android:name=".led.ButtonBroadcast"
             android:enabled="true"
@@ -58,7 +58,6 @@
                 <action android:name="android.petrobot.action.WIFIBT_KEY" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".PairingRequest"
             android:enabled="true"
