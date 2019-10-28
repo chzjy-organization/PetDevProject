@@ -84,6 +84,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Timer;
@@ -192,6 +194,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         if (!WifiUtil.isWifiEnable(mWifiManager)) {
             mWifiManager.setWifiEnabled(true);
         }
+        ledControl.turnOnCustom2Light();
     }
 
     private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
@@ -550,10 +553,28 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(LedData ledData) {
         if (ledData.k == 1) {
+            setDiscoverableTimeout(10);
             spark();
         }
     }
 
+    public void setDiscoverableTimeout(int timeout){
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        try {
+            Method setDiscoverableTimeout = BluetoothAdapter.class.getMethod("setDiscoverableTimeout", int.class);
+            setDiscoverableTimeout.setAccessible(true);
+            Method setScanMode = BluetoothAdapter.class.getMethod("setScanMode", int.class, int.class);
+            setScanMode.setAccessible(true);
+            setDiscoverableTimeout.invoke(adapter, timeout);
+            setScanMode.invoke(adapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE, timeout);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
     private int clo = 0;
 
     public void spark() {
