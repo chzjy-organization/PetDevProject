@@ -579,25 +579,23 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     public void spark() {
         Timer timer = new Timer();
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
         TimerTask taskcc = new TimerTask() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     public void run() {
+                        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
                         if (clo == 0) {
                             clo = 1;
                             ledControl.turnOnCustom1Light();
                         } else {
+                            if (networkInfo != null && networkInfo.isAvailable()) { clo=0;}
                             if (clo == 1) {
                                 clo = 0;
-                                if (networkInfo != null && networkInfo.isAvailable()) {
-                                    ledControl.turnOnCustom1Light();
-                                } else {
-                                    ledControl.turnOffCustom1Light();
+                                ledControl.turnOffCustom1Light();
                                 }
-                            }
                         }
                     }
                 });
