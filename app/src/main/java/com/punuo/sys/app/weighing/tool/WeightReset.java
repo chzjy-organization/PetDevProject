@@ -7,7 +7,8 @@ import com.leplay.petwight.PetWeight;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class WeightReset {
+public class
+WeightReset {
     /**
      * 测得喂食器本身的重量，将其置零。
      */
@@ -16,7 +17,7 @@ public class WeightReset {
         String filepath = "/dev/petfoodweighter";
         petWeight = new PetWeight();
         int value = petWeight.getWeight();
-        Log.i("kuiya", "获得质量为"+value);
+        Log.i("reset_weight", "获得质量为"+value);
         String cmd = String.valueOf(value);
         try{
             FileOutputStream fos = new FileOutputStream(filepath);
@@ -27,7 +28,7 @@ public class WeightReset {
             Log.i("SerialService", "++liujihui++, IOException: " + e);
             return false;
         }
-        Log.i("kuiya", "成功置零");
+        Log.i("reset_weight", "成功置零");
         return true;
     }
 }

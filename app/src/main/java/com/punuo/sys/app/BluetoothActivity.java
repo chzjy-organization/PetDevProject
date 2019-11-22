@@ -10,7 +10,6 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,7 +27,6 @@ import com.punuo.sys.app.bluetooth.PTOMessage;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
-import com.punuo.sys.app.weighing.WeighingActivity;
 import com.punuo.sys.app.weighing.tool.WeightReset;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
@@ -143,8 +141,8 @@ public class BluetoothActivity extends BaseActivity {
         mWeight.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(BluetoothActivity.this,WeighingActivity.class);
-                startActivity(intent);
+//                Intent intent = new Intent(BluetoothActivity.this,WeighingActivity.class);
+//                startActivity(intent);
             }
         });
 

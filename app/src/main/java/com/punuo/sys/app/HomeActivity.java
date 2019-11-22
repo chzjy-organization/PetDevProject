@@ -59,6 +59,7 @@ import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
 import com.punuo.sys.app.weighing.requset.GetGroupMemberRequest;
 import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
+import com.punuo.sys.app.weighing.requset.WeightDataToServerRequest;
 import com.punuo.sys.app.weighing.tool.GroupMemberModel;
 import com.punuo.sys.app.weighing.tool.WeightReset;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
@@ -68,6 +69,7 @@ import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
+import com.punuo.sys.sdk.model.BaseModel;
 import com.punuo.sys.sdk.util.BaseHandler;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sdk.util.ToastUtils;
@@ -176,7 +178,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void onClick(View view) {
                 getQuality();
-                getGroupMember(SipConfig.getDevId());
+//                getGroupMember(SipConfig.getDevId());
             }
         });
         findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
@@ -186,12 +188,13 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 weightReset.reset();
             }
         });
-    }
 
+    }
 
     public String getQuality(){
         mPetWeight = new PetWeight();
         String quality = mPetWeight.getWeight()+"";
+        Log.i("weight" ,"获取到的重量"+ mPetWeight.getWeight());
         return quality;
     }
 
@@ -686,27 +689,59 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                         e.printStackTrace();
                     }
                     turn.turnStop();
+                    Log.i("weight", "开始称重");
+                    getGroupMember(SipConfig.getDevId());
+                    String leftedWeight = getQuality();
+                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(currentCount*10),leftedWeight);
                 }
             }).start();
-        }
+         }
+
         //TODO 还未完善，需要根据数据调整旋转时间
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void feedNowButton(FeedData feedData){
-        //默认喂食30s
+        //默认喂食30s,然后在延时一定时间后进行称重操作。
         new Thread(new Runnable() {
             @Override
             public void run() {
                 turn.turnRight();
                 try {
-                    Thread.sleep(30*1000);
+                    Thread.sleep(2*60*1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 turn.turnStop();
+                Log.i("weight", "开始称重");
+                getGroupMember(SipConfig.getDevId());
             }
         }).start();
+    }
+
+    private WeightDataToServerRequest mWeightDataToServerRequest;
+    public void weightDataToWeb(String devid,String eatWeight,String leftedWeight){
+        mWeightDataToServerRequest = new WeightDataToServerRequest();
+        mWeightDataToServerRequest.addUrlParam("devid",devid);
+        mWeightDataToServerRequest.addUrlParam("eatWeight",eatWeight);
+        mWeightDataToServerRequest.addUrlParam("leftedWeight",leftedWeight);
+        mWeightDataToServerRequest.setRequestListener(new RequestListener<BaseModel>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onSuccess(BaseModel result) {
+                Log.i("weight", "吃粮克数、剩余克数成功发送");
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+        HttpManager.addRequest(mWeightDataToServerRequest);
     }
 
 

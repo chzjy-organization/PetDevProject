@@ -58,6 +58,7 @@ public class ProcessTasks {
         SipConfig.init(new ISipConfig() {
             NameAddress mServerAddress;
             NameAddress mDevNormalAddress;
+
             @Override
             public String getServerIp() {
                 return "39.98.36.250";

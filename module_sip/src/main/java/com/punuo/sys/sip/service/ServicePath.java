@@ -11,10 +11,11 @@ public class ServicePath {
     public static final String PATH_LOGIN = "/sip/login_response";
 
     public static final String PATH_ERROR = "/sip/error";
-    public static final String PATH_WEIGHT="/sip/weight_response";
     public static final String PATH_START_VIDEO ="/sip/start_video";
     public static final String PATH_STOP_VIDEO = "/sip/stop_video";
 
+    //关于称重
+    public static final String PATH_WEIGHT="/sip/weight_response";
     //立即出粮
     public static final String PATH_FEED_NOW = "/sip/feed_now_response";
 }
