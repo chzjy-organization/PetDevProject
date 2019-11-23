@@ -18,4 +18,6 @@ public class ServicePath {
     public static final String PATH_WEIGHT="/sip/weight_response";
     //立即出粮
     public static final String PATH_FEED_NOW = "/sip/feed_now_response";
+    //喂食计划
+    public static final String PATH_FEED_PLAN = "/sip/feed_plan_response";
 }

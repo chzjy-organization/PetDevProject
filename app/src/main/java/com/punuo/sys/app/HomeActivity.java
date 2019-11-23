@@ -34,7 +34,6 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.text.TextUtils;
@@ -53,6 +52,7 @@ import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
+import com.punuo.sys.app.feed.FeedAlarmManager;
 import com.punuo.sys.app.feed.FeedData;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
@@ -78,6 +78,7 @@ import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.event.ReRegisterEvent;
 import com.punuo.sys.sip.model.FeedNotifyData;
+import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.VideoData;
@@ -737,6 +738,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }
         }).start();
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(FeedPlan feedPlan) {
+        FeedAlarmManager.getInstance().addAlarmTask(this, feedPlan);
+    }
+
 
     private WeightDataToServerRequest mWeightDataToServerRequest;
     public void weightDataToWeb(String devid,String eatWeight,String leftedWeight){

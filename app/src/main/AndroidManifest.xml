@@ -49,10 +49,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".weighing.WeighingActivity"
-            android:screenOrientation="portrait" />
-
 
         <receiver
             android:name=".led.ButtonBroadcast"
@@ -75,6 +71,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.petrobot.action.FEED_KEY"/>
+                <action android:name="com.punuo.sys.app.FEED"/>
             </intent-filter>
         </receiver>
     </application>
