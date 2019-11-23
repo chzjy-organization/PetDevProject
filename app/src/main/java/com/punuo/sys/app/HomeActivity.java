@@ -723,20 +723,28 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void feedNowButton(FeedData feedData){
         //默认喂食30s,然后在延时一定时间后进行称重操作。
-        new Thread(new Runnable() {
+        turn.turnRight();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                turn.turnRight();
+//                try {
+//                    Thread.sleep();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                Log.i("weight", "开始称重");
+//
+//            }
+//        }).start();
+        mBaseHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                turn.turnRight();
-                try {
-                    Thread.sleep(2*60*1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 turn.turnStop();
-                Log.i("weight", "开始称重");
                 getGroupMember(SipConfig.getDevId());
             }
-        }).start();
+        }, 2 * 60 * 1000);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

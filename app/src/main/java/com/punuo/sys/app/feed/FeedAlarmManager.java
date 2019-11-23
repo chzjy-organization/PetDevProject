@@ -34,6 +34,25 @@ public class FeedAlarmManager {
     public FeedAlarmManager() {
             mAlarmManager = (AlarmManager) PnApplication.getInstance().getSystemService(Context.ALARM_SERVICE);
     }
+
+    //是否为未来时间（只从时分秒上判断）
+    private boolean isFeature(long targetTime) {
+        Calendar nowCalendar = Calendar.getInstance();
+        nowCalendar.set(Calendar.YEAR, 2019);
+        nowCalendar.set(Calendar.MONTH, 1);
+        nowCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        return nowCalendar.getTimeInMillis() < targetTime;
+    }
+    //生成当天计划标上的时间的时间戳
+    private long getTodayTaskTime(long targetTime) {
+        Calendar targetCalendar = Calendar.getInstance();
+        targetCalendar.setTimeInMillis(targetTime);
+        Calendar todayCalendar = Calendar.getInstance();
+        todayCalendar.set(Calendar.HOUR_OF_DAY, targetCalendar.get(Calendar.HOUR_OF_DAY));
+        todayCalendar.set(Calendar.MINUTE, targetCalendar.get(Calendar.MINUTE));
+        todayCalendar.set(Calendar.SECOND, targetCalendar.get(Calendar.SECOND));
+        return todayCalendar.getTimeInMillis();
+    }
     //即时添加定时任务
     public void addAlarmTask(Context context, FeedPlan feedPlan) {
         long targetTime = feedPlan.time * 1000;
@@ -43,17 +62,13 @@ public class FeedAlarmManager {
             targetIntent.cancel();
             mAlarmTasks.remove(key);
         }
-        Calendar nowCalendar = Calendar.getInstance();
-        nowCalendar.set(Calendar.YEAR, 2019);
-        nowCalendar.set(Calendar.MONTH, 1);
-        nowCalendar.set(Calendar.DAY_OF_MONTH, 1);
         //未来时间
-        if (nowCalendar.getTimeInMillis() < targetTime) {
+        if (isFeature(targetTime)) {
             Intent intent = new Intent();
             intent.setAction(ACTION_FEED_PLAN);
             intent.putExtra("count", feedPlan.count);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            mAlarmManager.set(AlarmManager.RTC_WAKEUP, targetTime, pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+            mAlarmManager.set(AlarmManager.RTC_WAKEUP, getTodayTaskTime(targetTime), pendingIntent);
             mAlarmTasks.put(key, targetIntent);
         }
     }
@@ -66,17 +81,11 @@ public class FeedAlarmManager {
             targetIntent.cancel();
             mAlarmTasks.remove(key);
         }
-        Calendar targetCalendar = Calendar.getInstance();
-        targetCalendar.setTimeInMillis(targetTime);
-        Calendar todayCalendar = Calendar.getInstance();
-        targetCalendar.set(Calendar.HOUR_OF_DAY, targetCalendar.get(Calendar.HOUR_OF_DAY));
-        targetCalendar.set(Calendar.MINUTE, targetCalendar.get(Calendar.MINUTE));
-        targetCalendar.set(Calendar.SECOND, targetCalendar.get(Calendar.SECOND));
         Intent intent = new Intent();
         intent.setAction(ACTION_FEED_PLAN);
         intent.putExtra("count", feedPlan.count);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        mAlarmManager.set(AlarmManager.RTC_WAKEUP, todayCalendar.getTimeInMillis(), pendingIntent);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        mAlarmManager.set(AlarmManager.RTC_WAKEUP, getTodayTaskTime(targetTime), pendingIntent);
         mAlarmTasks.put(key, targetIntent);
     }
 }
