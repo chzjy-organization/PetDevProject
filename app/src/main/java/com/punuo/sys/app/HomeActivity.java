@@ -23,6 +23,8 @@
 
 package com.punuo.sys.app;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,8 +54,9 @@ import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
-import com.punuo.sys.app.feed.FeedAlarmManager;
+import com.punuo.sys.app.feed.plan.FeedAlarmManager;
 import com.punuo.sys.app.feed.FeedData;
+import com.punuo.sys.app.feed.plan.FeedPlanData;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
@@ -61,7 +64,6 @@ import com.punuo.sys.app.weighing.requset.GetGroupMemberRequest;
 import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
 import com.punuo.sys.app.weighing.requset.WeightDataToServerRequest;
 import com.punuo.sys.app.weighing.tool.GroupMemberModel;
-import com.punuo.sys.app.weighing.tool.WeightReset;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
@@ -100,6 +102,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -177,21 +180,53 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 }.start();
             }
         });
+
         findViewById(R.id.weight).setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                getQuality();
-//                getGroupMember(SipConfig.getDevId());
+                int weightSum = 0;
+                for (int i = 0;i<=99;i++){
+                    int quality = Integer.parseInt(getQuality());
+                   weightSum += quality;
+                }
+                Log.i("average_weight", String.valueOf(weightSum/100));
+//                getQuality();
             }
         });
         findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                WeightReset weightReset = new WeightReset();
-                weightReset.reset();
+//                WeightReset weightReset = new WeightReset();
+//                weightReset.reset();
             }
         });
 
+        Timer timer  = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                //设置一个第二天零点的闹钟
+                setZeroClock();
+
+            }
+        },0,24*60*60*1000);
+    }
+
+    private AlarmManager alarmManager;
+    public void setZeroClock(){
+        alarmManager = (AlarmManager) PnApplication.getInstance().getSystemService(Context.ALARM_SERVICE);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH)+1);
+        calendar.set(Calendar.HOUR_OF_DAY,0);
+        calendar.set(Calendar.MINUTE,0);
+        calendar.set(Calendar.SECOND,0);
+        calendar.set(Calendar.MILLISECOND,0);
+        long time = calendar.getTimeInMillis();
+
+        Intent intent = new Intent();
+        intent.setAction("com.punuo.sys.app.SETZEROFEED");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,0,intent,0);
+        alarmManager.set(AlarmManager.RTC_WAKEUP,time,pendingIntent);
     }
 
     public String getQuality(){
@@ -744,12 +779,40 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 turn.turnStop();
                 getGroupMember(SipConfig.getDevId());
             }
-        }, 2 * 60 * 1000);
+        }, 30* 1000);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(FeedPlan feedPlan) {
         FeedAlarmManager.getInstance().addAlarmTask(this, feedPlan);
+//        FeedAlarmManager.getInstance().getTomorrowTaskTime(this,feedPlan);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(FeedPlanData feedPlanData){
+        turn.turnRight();
+        mBaseHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                turn.turnStop();
+                getGroupMember(SipConfig.getDevId());
+            }
+        },feedPlanData.mCount*1000);
+
+        //两种方法皆可
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                turn.turnRight();
+//                try {
+//                    Thread.sleep(feedPlanData.mCount*1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                turn.turnStop();
+//                getGroupMember(SipConfig.getDevId());
+//            }
+//        }).start();
     }
 
 

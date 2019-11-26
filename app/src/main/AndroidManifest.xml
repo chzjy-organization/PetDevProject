@@ -71,7 +71,20 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.petrobot.action.FEED_KEY"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".feed.plan.FeedPlanBroadcast"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
                 <action android:name="com.punuo.sys.app.FEED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".feed.plan.ZeroAlarmBroadcast"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.punuo.sys.app.SETZEROFEED"/>
             </intent-filter>
         </receiver>
     </application>

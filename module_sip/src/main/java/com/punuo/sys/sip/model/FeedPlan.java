@@ -17,5 +17,5 @@ public class FeedPlan {
     public String name;
     //份数
     @SerializedName("count")
-    public int count;
+    public String count;
 }

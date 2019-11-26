@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.punuo.sys.app.feed.FeedData;
 import com.punuo.sys.sdk.util.ToastUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -22,8 +23,9 @@ public class FeedBroadcast extends BroadcastReceiver {
                     EventBus.getDefault().post(feedData);
                 }
             }
-        } else if ("com.punuo.sys.app.FEED".equals(action)) {
-            EventBus.getDefault().post(feedData);
         }
+//        else if ("com.punuo.sys.app.FEED".equals(action)) {
+//            EventBus.getDefault().post(feedData);
+//        }
     }
 }
