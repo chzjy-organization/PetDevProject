@@ -5,7 +5,7 @@ import com.punuo.sys.sdk.httplib.BaseRequest;
 public class DevGetPlanRequest extends BaseRequest<PlanModel> {
 
     public DevGetPlanRequest(){
-        setRequestPath("");
+        setRequestPath("/feedplan/getFeedPlanForDev");
         setRequestType(RequestType.GET);
     }
 }

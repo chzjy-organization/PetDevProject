@@ -4,11 +4,13 @@ import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.punuo.sys.app.HomeActivity;
 import com.punuo.sys.sdk.account.AccountManager;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
+import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.model.FeedPlan;
 
 public class ZeroAlarmBroadcast extends BroadcastReceiver {
@@ -17,6 +19,7 @@ public class ZeroAlarmBroadcast extends BroadcastReceiver {
         String action = intent.getAction();
         if ("com.punuo.sys.app.SETZEROFEED".equals(action)){
             getPlan(context);
+
         }
     }
 
@@ -26,7 +29,7 @@ public class ZeroAlarmBroadcast extends BroadcastReceiver {
             return;
         }
         mGetPlanRequest = new DevGetPlanRequest();
-        mGetPlanRequest.addUrlParam("userName", AccountManager.getUserName());
+        mGetPlanRequest.addUrlParam("devid", SipConfig.getDevId());
         mGetPlanRequest.setRequestListener(new RequestListener<PlanModel>() {
             @Override
             public void onComplete() {
@@ -39,6 +42,7 @@ public class ZeroAlarmBroadcast extends BroadcastReceiver {
                 for (int i = 0;i<result.mPlanList.size();i+=1) {
                     FeedPlan plan = result.mPlanList.get(i);
                     FeedAlarmManager.getInstance().addAlarmTask(context,plan);
+                    Log.i("plan", "成功获取到喂食计划并创建alarm");
                 }
             }
             @Override

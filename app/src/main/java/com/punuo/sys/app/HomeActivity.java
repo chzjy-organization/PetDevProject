@@ -207,6 +207,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             public void run() {
                 //设置一个第二天零点的闹钟
                 setZeroClock();
+                Log.i("plan", "开始设置0点闹钟");
 
             }
         },0,24*60*60*1000);
@@ -227,6 +228,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         intent.setAction("com.punuo.sys.app.SETZEROFEED");
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this,0,intent,0);
         alarmManager.set(AlarmManager.RTC_WAKEUP,time,pendingIntent);
+        Log.i("plan", "0点闹钟设置完成 ");
     }
 
     public String getQuality(){

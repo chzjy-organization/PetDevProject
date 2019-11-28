@@ -89,7 +89,8 @@ public class FeedAlarmManager {
             Intent intent = new Intent();
             intent.setAction(ACTION_FEED_PLAN);
             intent.putExtra("count", feedPlan.count);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+            int requestCode = key.hashCode();
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, 0);
 //            mAlarmManager.set(AlarmManager.RTC_WAKEUP, getTodayTaskTime(targetTime), pendingIntent);
             if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
                 mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,getTodayTaskTime(targetTime),pendingIntent);
@@ -100,6 +101,7 @@ public class FeedAlarmManager {
             }
             Log.i("plan", "成功设置alarm ");
             mAlarmTasks.put(key, targetIntent);
+            Log.i("plan", ""+mAlarmTasks);
         }
 
         //过去时间(只比较时分秒)
@@ -108,7 +110,14 @@ public class FeedAlarmManager {
             intent.setAction(ACTION_FEED_PLAN);
             intent.putExtra("count",feedPlan.count);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-            mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP,getTomorrowTaskTime(targetTime),24*60*60*1000,pendingIntent);
+//            mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP,getTomorrowTaskTime(targetTime),24*60*60*1000,pendingIntent);
+            if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
+                mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,getTomorrowTaskTime(targetTime),pendingIntent);
+            }else if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.KITKAT){
+                mAlarmManager.setExact(AlarmManager.RTC_WAKEUP,getTomorrowTaskTime(targetTime),pendingIntent);
+            }else{
+                mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP,getTomorrowTaskTime(targetTime),AlarmManager.INTERVAL_DAY,pendingIntent);
+            }
             mAlarmTasks.put(key, targetIntent);
             Log.i("plan", "测试设置已过时间");
         }
