@@ -30,9 +30,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -45,6 +47,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -65,6 +68,7 @@ import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
 import com.punuo.sys.app.weighing.requset.WeightDataToServerRequest;
 import com.punuo.sys.app.weighing.tool.GroupMemberModel;
 import com.punuo.sys.app.wifi.OnServerWifiListener;
+import com.punuo.sys.app.wifi.WifiAdmin;
 import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
@@ -84,6 +88,7 @@ import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.VideoData;
+import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.video.H264Config;
 import com.serenegiant.common.BaseActivity;
@@ -97,6 +102,7 @@ import com.serenegiant.usb.UVCCamera;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -131,6 +137,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private BaseHandler mBaseHandler;
     private PetWeight mPetWeight;
 
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -149,7 +156,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         networkChangeReceiver = new NetworkChangeReceiver();
         registerReceiver(networkChangeReceiver, intentFilter);
 
-
         mNativeStreamer = new NativeStreamer();
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mUVCCameraView = findViewById(R.id.camera_surface_view);
@@ -157,6 +163,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
         EventBus.getDefault().register(this);
         retryTimes = 0;
+
+
 
         findViewById(R.id.turn_right).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -296,6 +304,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             mWifiManager.setWifiEnabled(true);
         }
         ledControl.turnOnCustom2Light();
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo == null ) {
+            WifiAdmin wifiAdmin = new WifiAdmin(HomeActivity.this);
+            wifiAdmin.openWifi();
+            WifiConfiguration wcg = wifiAdmin.CreateWifiInfo("admin", "12345678", 3);
+            wifiAdmin.addNetwork(wcg);
+        }
     }
 
     private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
@@ -494,6 +510,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     };
     private boolean started = false;
     private byte[] mBytes = new byte[H264Config.VIDEO_WIDTH * H264Config.VIDEO_HEIGHT * 3 / 2];
+
+
     private IFrameCallback mIFrameCallback = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
@@ -525,6 +543,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         encodeStart();
         started = true;
     }
+
 
     @Override
     public void handleMessage(Message msg) {
@@ -657,6 +676,16 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             setDiscoverableTimeout(10);
             spark();
         }
+    }
+
+    //接收WiFi账号密码连接WiFi
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(WiFiData result){
+        WifiAdmin wifiAdmin = new WifiAdmin(HomeActivity.this);
+        wifiAdmin.openWifi();
+        WifiConfiguration wcg = wifiAdmin.CreateWifiInfo(result.admin, result.password, 3);
+        wifiAdmin.addNetwork(wcg);
+        Log.d("HomeActivity","wifi set success");
     }
 
     public void setDiscoverableTimeout(int timeout){
