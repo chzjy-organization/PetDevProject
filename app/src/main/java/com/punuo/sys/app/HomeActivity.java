@@ -54,8 +54,10 @@ import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
-import com.punuo.sys.app.feed.plan.FeedAlarmManager;
+import com.punuo.sys.app.detection.MotionDetector;
+import com.punuo.sys.app.detection.MotionDetectorCallback;
 import com.punuo.sys.app.feed.FeedData;
+import com.punuo.sys.app.feed.plan.FeedAlarmManager;
 import com.punuo.sys.app.feed.plan.FeedPlanData;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
@@ -130,6 +132,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private NetworkChangeReceiver networkChangeReceiver;
     private BaseHandler mBaseHandler;
     private PetWeight mPetWeight;
+    private MotionDetector mMotionDetector; //移动侦测
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -138,6 +141,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         setContentView(R.layout.home_activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
         mBaseHandler = new BaseHandler(this);
         ProcessTasks.commonLaunchTasks(PnApplication.getInstance());
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -154,6 +158,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mUVCCameraView = findViewById(R.id.camera_surface_view);
         initSurfaceViewSize();
+        initDetection(mUVCCameraView);
         mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
         EventBus.getDefault().register(this);
         retryTimes = 0;
@@ -211,6 +216,25 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
             }
         },0,24*60*60*1000);
+    }
+
+    /**
+     * 初始化移动侦测
+     * @param surfaceView surfaceView
+     */
+    private void initDetection(SurfaceView surfaceView) {
+        mMotionDetector = new MotionDetector(this, surfaceView);
+        mMotionDetector.setMotionDetectorCallback(new MotionDetectorCallback() {
+            @Override
+            public void onMotionDetected() {
+                Log.i(TAG, "onMotionDetected: 监测到移动");
+            }
+
+            @Override
+            public void onTooDark() {
+                Log.i(TAG, "onMotionDetected: 光线太暗无法检测");
+            }
+        });
     }
 
     private AlarmManager alarmManager;
@@ -856,6 +880,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             registerDev();
             isFirst = false;
         }
+        if (mMotionDetector != null) {
+            mMotionDetector.onResume();
+        }
     }
 
     @Override
@@ -863,6 +890,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         super.onPause();
         if (mUSBMonitor != null) {
             mUSBMonitor.unregister();
+        }
+        if (mMotionDetector != null) {
+            mMotionDetector.onPause();
         }
     }
 }
