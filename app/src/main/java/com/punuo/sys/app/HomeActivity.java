@@ -526,6 +526,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
                 mNativeStreamer.onPreviewFrame(mBytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
             }
+            if (mMotionDetector != null) {
+                mMotionDetector.consume(mBytes,  H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            }
         }
     };
 
