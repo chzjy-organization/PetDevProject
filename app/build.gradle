@@ -69,4 +69,5 @@ dependencies {
     implementation project(':basesdk')
     implementation project(':module_sip')
     implementation files('libs/PetWeight.jar')
+    implementation project(':module_motion_detection')
 }
