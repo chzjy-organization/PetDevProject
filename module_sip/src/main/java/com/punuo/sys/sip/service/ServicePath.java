@@ -20,4 +20,6 @@ public class ServicePath {
     public static final String PATH_FEED_NOW = "/sip/feed_now_response";
     //喂食计划
     public static final String PATH_FEED_PLAN = "/sip/feed_plan_response";
+    //接收WiFi账号密码
+    public static final String PATH_WIFI="/sip/set_wifi_response";
 }
