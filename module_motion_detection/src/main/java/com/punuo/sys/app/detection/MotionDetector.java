@@ -1,9 +1,7 @@
 package com.punuo.sys.app.detection;
 
 import android.content.Context;
-import android.hardware.Camera;
 import android.os.Handler;
-import android.view.SurfaceView;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,7 +45,7 @@ public class MotionDetector {
                                 mHandler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        motionDetectorCallback.onMotionDetected();
+                                        motionDetectorCallback.onMotionDetected(nextData.get());
                                     }
                                 });
                             }
@@ -76,12 +74,10 @@ public class MotionDetector {
     private MotionDetectorThread worker;
 
     private Context mContext;
-    private SurfaceView mSurface;
 
-    public MotionDetector(Context context, SurfaceView previewSurface) {
+    public MotionDetector(Context context) {
         detector = new AggregateLumaMotionDetection();
         mContext = context;
-        mSurface = previewSurface;
     }
 
     public void setMotionDetectorCallback(MotionDetectorCallback motionDetectorCallback) {
@@ -110,21 +106,6 @@ public class MotionDetector {
         worker = new MotionDetectorThread();
         worker.start();
     }
-
-    private Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onPreviewFrame(byte[] data, Camera cam) {
-            if (data == null) return;
-            Camera.Size size = cam.getParameters().getPreviewSize();
-            if (size == null) return;
-
-            consume(data, size.width, size.height);
-        }
-    };
 
     public void onPause() {
         if (worker != null) {

@@ -1,4 +1,4 @@
-include ':app', ':module_sip', ':module_motion_detection', ":basesdk" ,":libuvccamera"
+include ':app', ':module_sip', ':module_motion_detection', ":basesdk" ,":libuvccamera", ":usbCameraCommon"
 apply from: './base.gradle'
 
 gradle.ext {

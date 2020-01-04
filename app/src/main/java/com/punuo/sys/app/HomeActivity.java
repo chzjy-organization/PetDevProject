@@ -30,7 +30,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
@@ -41,8 +44,6 @@ import android.os.StrictMode;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -73,8 +74,10 @@ import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
+import com.punuo.sys.sdk.httplib.upload.UploadPictureManager;
 import com.punuo.sys.sdk.model.BaseModel;
 import com.punuo.sys.sdk.util.BaseHandler;
+import com.punuo.sys.sdk.util.BitmapUtil;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sdk.util.ToastUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
@@ -95,11 +98,16 @@ import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
 import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
+import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
+import com.serenegiant.usbcameracommon.UVCCameraHandler;
+import com.serenegiant.widget.CameraViewInterface;
+import com.serenegiant.widget.UVCCameraTextureView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -117,7 +125,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     // for accessing USB and USB camera
     private USBMonitor mUSBMonitor;
     private UVCCamera mUVCCamera;
-    private SurfaceView mUVCCameraView;
+    private UVCCameraTextureView mUVCCameraView;
+    private UVCCameraHandler mCameraHandler;
     // for open&start / stop&close camera preview
     private Surface mPreviewSurface;
     private boolean isActive, isPreview;
@@ -157,9 +166,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mNativeStreamer = new NativeStreamer();
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
         mUVCCameraView = findViewById(R.id.camera_surface_view);
+        mCameraHandler = UVCCameraHandler.createHandler(this, mUVCCameraView, 1,
+                H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, 1);
         initSurfaceViewSize();
-        initDetection(mUVCCameraView);
-        mUVCCameraView.getHolder().addCallback(mSurfaceViewCallback);
+        initDetection();
+        mUVCCameraView.setCallback(mSurfaceViewCallback);
         EventBus.getDefault().register(this);
         retryTimes = 0;
 
@@ -218,16 +229,42 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         },0,24*60*60*1000);
     }
 
+    public void playFromRawFile() {
+        try {
+            MediaPlayer player = new MediaPlayer();
+            AssetFileDescriptor file = getResources().openRawResourceFd(R.raw.abc);
+            try {
+                player.setDataSource(file.getFileDescriptor(), file.getStartOffset(), file.getLength());
+                file.close();
+                if (!player.isPlaying()) {
+                    player.prepare();
+                    player.start();
+                }
+            } catch (IOException e) {
+                player = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private long lastDetectorTime = 0; // 上一次检测到移动的时间
+
     /**
      * 初始化移动侦测
-     * @param surfaceView surfaceView
      */
-    private void initDetection(SurfaceView surfaceView) {
-        mMotionDetector = new MotionDetector(this, surfaceView);
+    private void initDetection() {
+        mMotionDetector = new MotionDetector(this);
         mMotionDetector.setMotionDetectorCallback(new MotionDetectorCallback() {
             @Override
-            public void onMotionDetected() {
+            public void onMotionDetected(byte[] bytes) {
                 Log.i(TAG, "onMotionDetected: 监测到移动");
+                long nowTime = System.currentTimeMillis();
+                if (nowTime - lastDetectorTime > 2 * 60 * 1000) {
+                    lastDetectorTime = nowTime;
+//                    shotPicture(bytes); //捕捉当前画面
+                    recordMovie(); //捕捉视频
+                }
             }
 
             @Override
@@ -236,6 +273,83 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }
         });
     }
+
+    private void shotPicture(byte[] bytes) {
+        Bitmap bitmap = BitmapUtil.createBitmap(bytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+        BitmapUtil.saveBitmapAsync(HomeActivity.this, bitmap, "/DCIM/",
+                System.currentTimeMillis() + ".jpg", new BitmapUtil.SaveCallback() {
+                    @Override
+                    public void onSaveSuccess(String filePath) {
+                        //上传图片
+                        UploadPictureManager.getInstance().uploadPicture(filePath, SipConfig.getDevId());
+                    }
+
+                    @Override
+                    public void onSaveFail() {
+
+                    }
+                });
+    }
+
+    private void recordMovie() {
+        if (mUVCCamera != null) {
+            mCameraHandler.setUVCCamera(mUVCCamera);
+            mCameraHandler.addCallback(mCameraCallback);
+            if (checkPermissionWriteExternalStorage() && checkPermissionAudio()) {
+                if (!mCameraHandler.isRecording()) {
+                    mCameraHandler.startRecording();
+                    mUVCCameraView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mCameraHandler.stopRecording();
+                        }
+                    }, 10 * 1000); //录制10s
+                }
+            }
+        }
+    }
+
+    private AbstractUVCCameraHandler.CameraCallback mCameraCallback = new AbstractUVCCameraHandler.CameraCallback() {
+        @Override
+        public void onOpen() {
+
+        }
+
+        @Override
+        public void onClose() {
+
+        }
+
+        @Override
+        public void onStartPreview() {
+
+        }
+
+        @Override
+        public void onStopPreview() {
+
+        }
+
+        @Override
+        public void onStartRecording() {
+
+        }
+
+        @Override
+        public void onStopRecording(String url) {
+            mUVCCameraView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    UploadPictureManager.getInstance().uploadVideo(url, SipConfig.getDevId());
+                }
+            }, 1000); //延迟1s 省的文件还没有生成。
+        }
+
+        @Override
+        public void onError(Exception e) {
+
+        }
+    };
 
     private AlarmManager alarmManager;
     public void setZeroClock(){
@@ -414,7 +528,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                                 return;
                             }
                         }
-                        mPreviewSurface = mUVCCameraView.getHolder().getSurface();
+                        mPreviewSurface = mUVCCameraView.getSurface();
                         if (mPreviewSurface != null) {
                             isActive = true;
                             camera.setPreviewDisplay(mPreviewSurface);
@@ -483,18 +597,17 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }, 0);
         }
     }
-
-    private final SurfaceHolder.Callback mSurfaceViewCallback = new SurfaceHolder.Callback() {
+    private final CameraViewInterface.Callback mSurfaceViewCallback = new CameraViewInterface.Callback() {
         @Override
-        public void surfaceCreated(final SurfaceHolder holder) {
+        public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
             if (DEBUG) Log.v(TAG, "surfaceCreated:");
         }
 
         @Override
-        public void surfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
+        public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
             if ((width == 0) || (height == 0)) return;
             if (DEBUG) Log.v(TAG, "surfaceChanged:");
-            mPreviewSurface = holder.getSurface();
+            mPreviewSurface = surface;
             synchronized (mSync) {
                 if (isActive && !isPreview && (mUVCCamera != null)) {
                     mUVCCamera.setPreviewDisplay(mPreviewSurface);
@@ -505,7 +618,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         }
 
         @Override
-        public void surfaceDestroyed(final SurfaceHolder holder) {
+        public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
             if (DEBUG) Log.v(TAG, "surfaceDestroyed:");
             synchronized (mSync) {
                 if (mUVCCamera != null) {
@@ -528,6 +641,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }
             if (mMotionDetector != null) {
                 mMotionDetector.consume(mBytes,  H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            }
+            if (mCameraHandler != null && mCameraHandler.getCameraThread() != null) {
+                mCameraHandler.getCameraThread().onFrame(frame);
             }
         }
     };
