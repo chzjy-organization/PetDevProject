@@ -268,7 +268,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             public void onMotionDetected(byte[] bytes) {
                 Log.i(TAG, "onMotionDetected: 监测到移动");
                 long nowTime = System.currentTimeMillis();
-                if (nowTime - lastDetectorTime > 2 * 60 * 1000) {
+                if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
                     lastDetectorTime = nowTime;
 //                    shotPicture(bytes); //捕捉当前画面
                     recordMovie(); //捕捉视频
@@ -1001,7 +1001,10 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.stop();
-                mMediaPlayer.reset();
+            }
+            mMediaPlayer.reset();
+            if (TextUtils.equals(musicData.musicUrl, "stop")) {
+                return;
             }
             Uri uri = Uri.parse(musicData.musicUrl);
             try {
@@ -1010,11 +1013,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 mMediaPlayer.start();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-        } else {
-            if (mMediaPlayer.isPlaying()) {
-                mMediaPlayer.stop();
-                mMediaPlayer.reset();
             }
         }
     }
