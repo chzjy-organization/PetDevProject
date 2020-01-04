@@ -32,11 +32,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -48,7 +48,6 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -91,6 +90,7 @@ import com.punuo.sys.sip.event.ReRegisterEvent;
 import com.punuo.sys.sip.model.FeedNotifyData;
 import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.model.LoginResponse;
+import com.punuo.sys.sip.model.MusicData;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.VideoData;
 import com.punuo.sys.sip.model.WiFiData;
@@ -113,7 +113,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -148,6 +147,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private BaseHandler mBaseHandler;
     private PetWeight mPetWeight;
     private MotionDetector mMotionDetector; //移动侦测
+    private MediaPlayer mMediaPlayer;
 
 
     @Override
@@ -268,7 +268,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             public void onMotionDetected(byte[] bytes) {
                 Log.i(TAG, "onMotionDetected: 监测到移动");
                 long nowTime = System.currentTimeMillis();
-                if (nowTime - lastDetectorTime > 2 * 60 * 1000) {
+                if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
                     lastDetectorTime = nowTime;
 //                    shotPicture(bytes); //捕捉当前画面
                     recordMovie(); //捕捉视频
@@ -987,6 +987,34 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 //                getGroupMember(SipConfig.getDevId());
 //            }
 //        }).start();
+    }
+
+    /**
+     * 接受音乐
+     * @param musicData
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(MusicData musicData) {
+        if (!TextUtils.isEmpty(musicData.musicUrl)) {
+            if (mMediaPlayer == null) {
+                mMediaPlayer = new MediaPlayer();
+            }
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.reset();
+            if (TextUtils.equals(musicData.musicUrl, "stop")) {
+                return;
+            }
+            Uri uri = Uri.parse(musicData.musicUrl);
+            try {
+                mMediaPlayer.setDataSource(this, uri);
+                mMediaPlayer.prepare();
+                mMediaPlayer.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
