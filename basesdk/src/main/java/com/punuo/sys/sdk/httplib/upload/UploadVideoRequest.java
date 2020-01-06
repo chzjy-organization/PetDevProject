@@ -11,7 +11,7 @@ import okhttp3.MediaType;
 public class UploadVideoRequest extends BaseRequest<UploadResult> {
     public UploadVideoRequest() {
         setRequestType(RequestType.UPLOAD);
-        setRequestPath("movedetectpic/addPics");
+        setRequestPath("/addPics");
         contentType(MediaType.parse("video/*"));
     }
 }
