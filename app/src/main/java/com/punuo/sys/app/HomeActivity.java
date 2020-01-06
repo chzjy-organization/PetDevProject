@@ -284,7 +284,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     private void shotPicture(byte[] bytes) {
         Bitmap bitmap = BitmapUtil.createBitmap(bytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-        BitmapUtil.saveBitmapAsync(HomeActivity.this, bitmap, "/DCIM/",
+        BitmapUtil.saveBitmapAsync(HomeActivity.this, bitmap, "/sdcard/DCIM/",
                 System.currentTimeMillis() + ".jpg", new BitmapUtil.SaveCallback() {
                     @Override
                     public void onSaveSuccess(String filePath) {
