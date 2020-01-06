@@ -35,7 +35,7 @@ public class UploadPictureManager {
         }
         mUploadPictureRequest = new UploadPictureRequest();
         mUploadPictureRequest.addEntityParam("photo", file);
-        mUploadPictureRequest.addEntityParam("userName", devId);
+        mUploadPictureRequest.addEntityParam("devid", devId);
         HttpManager.addRequest(mUploadPictureRequest);
     }
 
@@ -50,7 +50,7 @@ public class UploadPictureManager {
         }
         mUploadVideoRequest = new UploadVideoRequest();
         mUploadVideoRequest.addEntityParam("photo", file);
-        mUploadVideoRequest.addEntityParam("userName", devId);
+        mUploadVideoRequest.addEntityParam("devid", devId);
         HttpManager.addRequest(mUploadVideoRequest);
     }
 }
