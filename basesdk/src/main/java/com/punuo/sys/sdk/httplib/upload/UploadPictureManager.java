@@ -50,7 +50,7 @@ public class UploadPictureManager {
         }
         mUploadVideoRequest = new UploadVideoRequest();
         mUploadVideoRequest.addEntityParam("photo", file);
-        mUploadVideoRequest.addEntityParam("devid", devId);
+        mUploadVideoRequest.addEntityParam("userName", devId);
         HttpManager.addRequest(mUploadVideoRequest);
     }
 }
