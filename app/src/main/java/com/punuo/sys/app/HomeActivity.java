@@ -30,7 +30,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -47,7 +46,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -87,6 +85,7 @@ import com.punuo.sys.sip.model.FeedNotifyData;
 import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.RecvaddrData;
+import com.punuo.sys.sip.model.ResetData;
 import com.punuo.sys.sip.model.VideoData;
 import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
@@ -673,10 +672,20 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(LedData ledData) {
         if (ledData.k == 1) {
-            setDiscoverableTimeout(10);
-            spark();
+            //setDiscoverableTimeout(10);
+            //spark();
+            Back();
         }
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(ResetData result){
+        Back();
+    }
+
+    private void Back(){
+    super.onBackPressed();
+}
 
     //接收WiFi账号密码连接WiFi
     @Subscribe(threadMode = ThreadMode.MAIN)

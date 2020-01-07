@@ -22,4 +22,6 @@ public class ServicePath {
     public static final String PATH_FEED_PLAN = "/sip/feed_plan_response";
     //接收WiFi账号密码
     public static final String PATH_WIFI="/sip/set_wifi_response";
+    //重置功能
+    public static final String PATH_RESET="/sip/dev_reset";
 }
