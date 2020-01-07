@@ -24,4 +24,7 @@ public class ServicePath {
     public static final String PATH_WIFI="/sip/set_wifi_response";
     //重置功能
     public static final String PATH_RESET="/sip/dev_reset";
+
+    public static final String PATH_MUSIC="/sip/play_music_response";
+
 }
