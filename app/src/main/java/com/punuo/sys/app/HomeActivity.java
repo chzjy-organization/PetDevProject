@@ -66,6 +66,7 @@ import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.led.LedData;
 import com.punuo.sys.app.process.ProcessTasks;
 import com.punuo.sys.app.weighing.requset.GetGroupMemberRequest;
+import com.punuo.sys.app.weighing.requset.SaveOutedRequest;
 import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
 import com.punuo.sys.app.weighing.requset.WeightDataToServerRequest;
 import com.punuo.sys.app.weighing.tool.GroupMemberModel;
@@ -149,6 +150,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private PetWeight mPetWeight;
     private MotionDetector mMotionDetector; //移动侦测
     private MediaPlayer mMediaPlayer;
+    private static String quality;
 
 
     @Override
@@ -350,6 +352,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 @Override
                 public void run() {
                     UploadPictureManager.getInstance().uploadVideo(url, SipConfig.getDevId());
+                    Log.i(TAG, "开始上传视频");
                 }
             }, 1000); //延迟1s 省的文件还没有生成。
         }
@@ -379,10 +382,17 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     public String getQuality(){
+        int sum = 0;
+        int one_quality;//单次称重
         mPetWeight = new PetWeight();
-        String quality = mPetWeight.getWeight()+"";
-        Log.i("weight" ,"获取到的重量"+ mPetWeight.getWeight());
-        return quality;
+        for (int i = 0;i<100;i++){
+            one_quality = mPetWeight.getWeight();
+            sum += one_quality;
+        }
+        int quality = -((sum/100)-1100)*(100/17);
+        Log.i("weight" ,"获取到的重量"+ quality);
+        String average = String.valueOf(quality);
+        return average;
     }
 
     /**
@@ -390,7 +400,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
      */
     private GetGroupMemberRequest mGetGroupMemberRequest;
     private List<GroupMemberModel.Member> mMembers = new ArrayList<>();
-    public void getGroupMember(String devId) {
+    public void getGroupMember(String quality,String devId) {
         if (mGetGroupMemberRequest != null && !mGetGroupMemberRequest.isFinish()) {
             return;
         }
@@ -408,7 +418,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     return;
                 }
                 if (result.members != null && !result.members.isEmpty()) {
-                    weightToSipServer(result.members);
+                    weightToSipServer(quality,result.members);
                 }
             }
 
@@ -421,8 +431,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     //将数据发送到Sip服务器
-    public void weightToSipServer(List<GroupMemberModel.Member> members){
-        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(getQuality(), members);
+    public void weightToSipServer(String quality,List<GroupMemberModel.Member> members){
+        SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(quality, members);
         SipDevManager.getInstance().addRequest(getWeightRequest);
         Log.i("weight", "称重信息发送中...... ");
     }
@@ -916,7 +926,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 //        int currentCount = Integer.parseInt(m.group());
 //        String count1 = count.substring(0,1);//取出收到字符串的第一个字符
         int currentCount = Integer.parseInt(count);
-
         Log.i("feed", "currentCount: "+currentCount);
         if(currentCount>0){
             new Thread(new Runnable() {
@@ -929,15 +938,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                         e.printStackTrace();
                     }
                     turn.turnStop();
+                    quality = getQuality();
                     Log.i("weight", "开始称重");
-                    getGroupMember(SipConfig.getDevId());
-                    String leftedWeight = getQuality();
-                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(currentCount*10),leftedWeight);
+                    getGroupMember(quality,SipConfig.getDevId());
+                    //TODO 此处吃掉的份数*每份的质量(目前不确定)
+                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(currentCount*10),quality);
                 }
             }).start();
          }
-
-        //TODO 还未完善，需要根据数据调整旋转时间
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -962,7 +970,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void run() {
                 turn.turnStop();
-                getGroupMember(SipConfig.getDevId());
+                quality = getQuality();
+                getGroupMember(quality,SipConfig.getDevId());
+                //TODO 需要测量三十秒钟掉落了多少质量的粮食
             }
         }, 30* 1000);
     }
@@ -970,7 +980,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(FeedPlan feedPlan) {
         FeedAlarmManager.getInstance().addAlarmTask(this, feedPlan);
-//        FeedAlarmManager.getInstance().getTomorrowTaskTime(this,feedPlan);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -980,9 +989,13 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void run() {
                 turn.turnStop();
-                getGroupMember(SipConfig.getDevId());
+                quality = getQuality();
+                getGroupMember(quality,SipConfig.getDevId());
+                saveOutedCount(feedPlanData.mCount);
+                weightDataToWeb(SipConfig.getDevId(),String.valueOf(feedPlanData.mCount*10),quality);
             }
-        },feedPlanData.mCount*1000);
+            //TODO 每份旋转十秒
+        },feedPlanData.mCount*10*1000);
 
         //两种方法皆可
 //        new Thread(new Runnable() {
@@ -998,6 +1011,36 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 //                getGroupMember(SipConfig.getDevId());
 //            }
 //        }).start();
+    }
+
+    /**
+     * 将计划中喂食过后的份数反馈到服务器
+     */
+    private SaveOutedRequest mSaveOutedRequest;
+    public void saveOutedCount(int count){
+        if (mSaveOutedRequest!=null&&!mSaveOutedRequest.isFinish()){
+            return;
+        }
+        mSaveOutedRequest = new SaveOutedRequest();
+        mSaveOutedRequest.addUrlParam("devid",SipConfig.getDevId());
+        mSaveOutedRequest.addUrlParam("amount",count);
+        mSaveOutedRequest.setRequestListener(new RequestListener<BaseModel>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onSuccess(BaseModel result) {
+                Log.i(TAG, result.success+result.message);
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+        HttpManager.addRequest(mSaveOutedRequest);
     }
 
     /**

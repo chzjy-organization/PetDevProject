@@ -1,6 +1,9 @@
 package com.punuo.sys.sdk.httplib.upload;
 
+import android.util.Log;
+
 import com.punuo.sys.sdk.httplib.HttpManager;
+import com.punuo.sys.sdk.httplib.RequestListener;
 
 import java.io.File;
 
@@ -49,8 +52,24 @@ public class UploadPictureManager {
             return;
         }
         mUploadVideoRequest = new UploadVideoRequest();
-        mUploadVideoRequest.addEntityParam("photo", file);
-        mUploadVideoRequest.addEntityParam("userName", devId);
+        mUploadVideoRequest.addEntityParam("video", file);
+        mUploadVideoRequest.addEntityParam("devid", devId);
+        mUploadVideoRequest.setRequestListener(new RequestListener<UploadResult>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onSuccess(UploadResult result) {
+                Log.i("upLoadvideo", result.success+result.message+result.database);
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
         HttpManager.addRequest(mUploadVideoRequest);
     }
 }

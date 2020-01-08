@@ -1,5 +1,7 @@
 package com.punuo.sys.sip.service;
 
+import android.util.Log;
+
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.request.BaseSipRequest;
@@ -22,7 +24,6 @@ public class FeedPlanService extends NormalRequestService<FeedPlan> {
 
     @Override
     protected void onSuccess(Message msg, FeedPlan result) {
-
         EventBus.getDefault().post(result);
     }
 
