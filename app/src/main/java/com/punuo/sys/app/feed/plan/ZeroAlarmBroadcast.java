@@ -19,7 +19,6 @@ public class ZeroAlarmBroadcast extends BroadcastReceiver {
         String action = intent.getAction();
         if ("com.punuo.sys.app.SETZEROFEED".equals(action)){
             getPlan(context);
-
         }
     }
 
