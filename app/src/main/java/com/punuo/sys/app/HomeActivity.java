@@ -25,6 +25,7 @@ package com.punuo.sys.app;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -33,6 +34,7 @@ import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -95,6 +97,7 @@ import com.punuo.sys.sip.model.MusicData;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.ResetData;
 import com.punuo.sys.sip.model.VideoData;
+import com.punuo.sys.sip.model.VolumeData;
 import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.video.H264Config;
@@ -182,7 +185,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         mUVCCameraView.setCallback(mSurfaceViewCallback);
         EventBus.getDefault().register(this);
         retryTimes = 0;
-
 
 
         findViewById(R.id.turn_right).setOnClickListener(new View.OnClickListener() {
@@ -842,6 +844,18 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     super.onBackPressed();
 }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(VolumeData result){
+        AudioManager am = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
+        if(TextUtils.equals(result.volume,"raise")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_RAISE, 0);
+        }
+        if(TextUtils.equals(result.volume,"lower")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_LOWER, 0);
+        }
+    }
     //接收WiFi账号密码连接WiFi
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(WiFiData result){
