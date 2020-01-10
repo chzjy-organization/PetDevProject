@@ -13,7 +13,7 @@ public class UploadPictureRequest extends BaseRequest<UploadResult> {
 
     public UploadPictureRequest() {
         setRequestType(RequestType.UPLOAD);
-        setRequestPath("movedetectpic/addPics");
+        setRequestPath("movedetectvideo/addVideos");
         contentType(MediaType.parse("image/*"));
     }
 }
