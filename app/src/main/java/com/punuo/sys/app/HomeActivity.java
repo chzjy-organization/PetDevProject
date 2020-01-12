@@ -25,12 +25,14 @@ package com.punuo.sys.app;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -94,6 +96,7 @@ import com.punuo.sys.sip.model.MusicData;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.ResetData;
 import com.punuo.sys.sip.model.VideoData;
+import com.punuo.sys.sip.model.VolumeData;
 import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.video.H264Config;
@@ -112,7 +115,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -205,13 +210,26 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         findViewById(R.id.weight).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int weightSum = 0;
-                for (int i = 0; i <= 99; i++) {
-                    int quality = Integer.parseInt(getQuality());
-                    weightSum += quality;
+                /**
+                 * 测试设备初始重量
+                 */
+                int sum = 0;
+                int one_quality;//单次称重
+                ArrayList<Integer> arrayList = new ArrayList<>();
+                mPetWeight = new PetWeight();
+                for (int i = 0;i<100;i++){
+                    one_quality = mPetWeight.getWeight();
+                    arrayList.add(one_quality);
                 }
-                Log.i("average_weight", String.valueOf(weightSum / 100));
-//                getQuality();
+                Collections.sort(arrayList);
+                arrayList.subList(0,10).clear();
+                arrayList.subList(arrayList.size()-10,arrayList.size()).clear();
+                Log.i("weight", ""+arrayList.size());
+                for (int i =0;i<arrayList.size();i++){
+                    sum += arrayList.get(i);
+                }
+                Log.i("weight", "平均值为"+sum/80);
+
             }
         });
         findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
@@ -370,15 +388,30 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     public String getQuality() {
         int sum = 0;
         int one_quality;//单次称重
+        float fQuality;
+        double quality;
+        ArrayList<Integer> arrayList = new ArrayList<>();
         mPetWeight = new PetWeight();
         for (int i = 0; i < 100; i++) {
             one_quality = mPetWeight.getWeight();
-            sum += one_quality;
+            arrayList.add(one_quality);
         }
-        int quality = -((sum / 100) - 1100) * (100 / 17);
-        Log.i("weight", "获取到的重量" + quality);
-        String average = String.valueOf(quality);
-        return average;
+        Collections.sort(arrayList);
+        arrayList.subList(0,10).clear();
+        arrayList.subList(arrayList.size()-10,arrayList.size()).clear();
+        Log.i("weight", ""+arrayList.size());
+        for (int i =0;i<arrayList.size();i++){
+            sum += arrayList.get(i);
+        }
+        Log.i("weight", "平均值为"+sum/80);
+        if(((sum/80)-1154)>0){
+            fQuality = ((sum/80)-1154)*(100/17);
+        }else{
+            fQuality = -((sum/80)-1154)*(100/17);
+        }
+        quality = Math.round(fQuality);
+        Log.i("weight", "重量为"+quality);
+        return String.valueOf(quality);
     }
 
     /**
@@ -680,6 +713,18 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         super.onBackPressed();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(VolumeData result){
+        AudioManager am = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
+        if(TextUtils.equals(result.volume,"raise")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_RAISE, 0);
+        }
+        if(TextUtils.equals(result.volume,"lower")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_LOWER, 0);
+        }
+    }
     //接收WiFi账号密码连接WiFi
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(WiFiData result) {
@@ -788,55 +833,35 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 //        int currentCount = Integer.parseInt(m.group());
 //        String count1 = count.substring(0,1);//取出收到字符串的第一个字符
         int currentCount = Integer.parseInt(count);
-        Log.i("feed", "currentCount: " + currentCount);
-        if (currentCount > 0) {
-            new Thread(new Runnable() {
+        Log.i("feed", "currentCount: "+currentCount);
+        if(currentCount>0){
+            turn.turnRight();
+            mBaseHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    turn.turnRight();
-                    try {
-                        Thread.sleep(currentCount * 10 * 1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     turn.turnStop();
                     quality = getQuality();
-                    Log.i("weight", "开始称重");
-                    getGroupMember(quality, SipConfig.getDevId());
-                    //TODO 此处吃掉的份数*每份的质量(目前不确定)
-                    weightDataToWeb(SipConfig.getDevId(), String.valueOf(currentCount * 10), quality);
+                    getGroupMember(quality,SipConfig.getDevId());
+                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(currentCount*7.5),quality);
                 }
-            }).start();
+            },currentCount*12*1000);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void feedNowButton(FeedData feedData) {
-        //默认喂食30s,然后在延时一定时间后进行称重操作。
+    public void feedNowButton(FeedData feedData){
+        //默认喂食36s,然后在延时一定时间后进行称重操作。
         turn.turnRight();
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                turn.turnRight();
-//                try {
-//                    Thread.sleep();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                Log.i("weight", "开始称重");
-//
-//            }
-//        }).start();
         mBaseHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 turn.turnStop();
                 quality = getQuality();
-                getGroupMember(quality, SipConfig.getDevId());
+                getGroupMember(quality,SipConfig.getDevId());
+                weightDataToWeb(SipConfig.getDevId(),String.valueOf(3*7.5),quality);
                 //TODO 需要测量三十秒钟掉落了多少质量的粮食
             }
-        }, 30 * 1000);
+        }, 36* 1000);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -854,25 +879,10 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 quality = getQuality();
                 getGroupMember(quality, SipConfig.getDevId());
                 saveOutedCount(feedPlanData.mCount);
-                weightDataToWeb(SipConfig.getDevId(), String.valueOf(feedPlanData.mCount * 10), quality);
+                weightDataToWeb(SipConfig.getDevId(),String.valueOf(feedPlanData.mCount*7.5),quality);
             }
             //TODO 每份旋转十秒
-        }, feedPlanData.mCount * 10 * 1000);
-
-        //两种方法皆可
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                turn.turnRight();
-//                try {
-//                    Thread.sleep(feedPlanData.mCount*1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                turn.turnStop();
-//                getGroupMember(SipConfig.getDevId());
-//            }
-//        }).start();
+        },feedPlanData.mCount*12*1000);
     }
 
     /**
