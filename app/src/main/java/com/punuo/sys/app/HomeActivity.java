@@ -313,6 +313,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         });
     }
 
+    /**
+     * 截屏
+     */
     private void capturePicture() {
         if(mCameraHelper != null) {
             String picPath = UVCCameraHelper.ROOT_PATH +"DCIM/"+ System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
