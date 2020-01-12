@@ -47,6 +47,10 @@ public class H264EncodeConsumer extends Thread {
     private WeakReference<Mp4MediaMuxer> mMuxerRef;
     private boolean isAddKeyFrame = false;
 
+    public boolean isExit() {
+        return isExit;
+    }
+
     public interface OnH264EncodeResultListener {
         void onEncodeResult(byte[] data, int offset,
                             int length, long timestamp);

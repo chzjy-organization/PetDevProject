@@ -33,9 +33,9 @@ public class UploadPictureManager {
     }
 
     public void uploadPicture(String path, String devId, RequestListener<UploadResult> listener) {
-        if (mUploadPictureRequest != null && !mUploadPictureRequest.isFinish()) {
-            return;
-        }
+//        if (mUploadPictureRequest != null && !mUploadPictureRequest.isFinish()) {
+//            return;
+//        }
         File file = new File(path);
         if (!file.exists()) {
             return;
@@ -49,9 +49,9 @@ public class UploadPictureManager {
 
     private UploadVideoRequest mUploadVideoRequest;
     public void uploadVideo(String path, String devId) {
-        if (mUploadVideoRequest != null && !mUploadVideoRequest.isFinish()) {
-            return;
-        }
+//        if (mUploadVideoRequest != null && !mUploadVideoRequest.isFinish()) {
+//            return;
+//        }
         File file = new File(path);
         if (!file.exists()) {
             return;

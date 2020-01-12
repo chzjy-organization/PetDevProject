@@ -55,7 +55,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 
     private static final boolean DEBUG = true;    // TODO set false on release
     private static final String TAG = "AbsUVCCameraHandler";
-
+    private static volatile boolean flag = false;
 
     // 对外回调接口
     public interface CameraCallback {
@@ -683,6 +683,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
 
 
         public void handleStopPusher() {
+            flag = false;
             // 停止混合器
             if (mMuxer != null) {
                 mMuxer.release();
@@ -715,6 +716,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
                     }
                 }
             });
+            flag = true;
             mH264Consumer.start();
             // 添加混合器
             if (mMuxer != null) {
@@ -814,7 +816,7 @@ public abstract class AbstractUVCCameraHandler extends Handler {
                     }).start();
                 }
                 // 视频
-                if (mH264Consumer != null) {
+                if (flag && mH264Consumer != null) {
                     // 修改分辨率参数
                     mH264Consumer.setRawYuv(yuv, mWidth, mHeight);
                 }

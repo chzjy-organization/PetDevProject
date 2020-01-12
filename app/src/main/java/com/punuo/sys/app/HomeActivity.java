@@ -80,7 +80,6 @@ import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
 import com.punuo.sys.sdk.httplib.upload.UploadPictureManager;
-import com.punuo.sys.sdk.httplib.upload.UploadResult;
 import com.punuo.sys.sdk.model.BaseModel;
 import com.punuo.sys.sdk.util.BaseHandler;
 import com.punuo.sys.sdk.util.CommonUtil;
@@ -115,7 +114,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -232,39 +230,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
             }
         });
-        findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                recordMovie();
-            }
-        });
+        findViewById(R.id.reset).setOnClickListener(view -> recordMovie());
         //截屏操作
-        findViewById(R.id.capture).setOnClickListener(view -> {
-            if(mCameraHelper != null) {
-                String picPath = UVCCameraHelper.ROOT_PATH +"DCIM/"+ System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
-                mCameraHelper.capturePicture(picPath, path -> {
-                      UploadPictureManager.getInstance().uploadPicture(picPath, SipConfig.getDevId(), new RequestListener<UploadResult>() {
-                          @Override
-                          public void onComplete() {
-
-                          }
-
-                          @Override
-                          public void onSuccess(UploadResult result) {
-                              if (result == null) {
-                                  return;
-                              }
-                              //TODO 上传成功之后
-                          }
-
-                          @Override
-                          public void onError(Exception e) {
-
-                          }
-                      });
-                });
-            }
-        });
+        findViewById(R.id.capture).setOnClickListener(view -> capturePicture());
 
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -332,6 +300,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 long nowTime = System.currentTimeMillis();
                 if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
                     lastDetectorTime = nowTime;
+                    //视频不行的话就用图像吧。
+//                    capturePicture();//捕捉图像
                     recordMovie(); //捕捉视频
                 }
             }
@@ -341,6 +311,15 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 Log.i(TAG, "onMotionDetected: 光线太暗无法检测");
             }
         });
+    }
+
+    private void capturePicture() {
+        if(mCameraHelper != null) {
+            String picPath = UVCCameraHelper.ROOT_PATH +"DCIM/"+ System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
+            mCameraHelper.capturePicture(picPath, path -> {
+                UploadPictureManager.getInstance().uploadPicture(picPath, SipConfig.getDevId());
+            });
+        }
     }
 
     private void recordMovie() {
