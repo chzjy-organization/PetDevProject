@@ -29,6 +29,10 @@ public class UploadPictureManager {
     private UploadPictureRequest mUploadPictureRequest;
 
     public void uploadPicture(String path, String devId) {
+        uploadPicture(path, devId, null);
+    }
+
+    public void uploadPicture(String path, String devId, RequestListener<UploadResult> listener) {
         if (mUploadPictureRequest != null && !mUploadPictureRequest.isFinish()) {
             return;
         }
@@ -39,6 +43,7 @@ public class UploadPictureManager {
         mUploadPictureRequest = new UploadPictureRequest();
         mUploadPictureRequest.addEntityParam("photo", file);
         mUploadPictureRequest.addEntityParam("devid", devId);
+        mUploadPictureRequest.setRequestListener(listener);
         HttpManager.addRequest(mUploadPictureRequest);
     }
 

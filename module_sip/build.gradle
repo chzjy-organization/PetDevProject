@@ -34,5 +34,4 @@ dependencies {
     annotationProcessor 'com.alibaba:arouter-compiler:1.2.2'
     annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0'
     api project(':libuvccamera')
-    api project(':usbCameraCommon')
 }

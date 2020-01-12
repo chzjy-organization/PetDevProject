@@ -9,11 +9,11 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.punuo.stream.NativeStreamer;
+import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sip.R;
 import com.punuo.sys.sip.R2;
 import com.punuo.sys.sip.model.RecvaddrData;
-import com.serenegiant.common.BaseActivity;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
