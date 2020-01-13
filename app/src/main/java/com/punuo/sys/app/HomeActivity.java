@@ -963,13 +963,22 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Override
     protected void onResume() {
         super.onResume();
-        if (mCameraHelper != null) {
-            mCameraHelper.registerUSB();
-        }
         if (isFirst) {
             init();
             registerDev();
+            mBaseHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mCameraHelper != null) {
+                        mCameraHelper.registerUSB();
+                    }
+                }
+            }, 1000); //延迟1s去初始化摄像头
             isFirst = false;
+        } else {
+            if (mCameraHelper != null) {
+                mCameraHelper.registerUSB();
+            }
         }
         if (mMotionDetector != null) {
             mMotionDetector.onResume();
