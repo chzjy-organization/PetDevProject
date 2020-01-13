@@ -797,6 +797,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             } else {
                 ledControl.turnOffCustom1Light();
             }
+            if (!mBaseHandler.hasMessages(MSG_HEART_BEAR_VALUE)) {
+                registerDev();
+            }
         }
     }
 
