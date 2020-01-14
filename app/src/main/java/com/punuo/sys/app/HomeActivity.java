@@ -298,7 +298,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             public void onMotionDetected(byte[] bytes) {
                 Log.i(TAG, "onMotionDetected: 监测到移动");
                 long nowTime = System.currentTimeMillis();
-                if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
+                if (nowTime - lastDetectorTime > 1 * 60 * 1000) {
                     lastDetectorTime = nowTime;
                     //视频不行的话就用图像吧。
 //                    capturePicture();//捕捉图像
@@ -371,7 +371,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         int sum = 0;
         int one_quality;//单次称重
         float fQuality;
-        double quality;
+        int quality;
         ArrayList<Integer> arrayList = new ArrayList<>();
         mPetWeight = new PetWeight();
         for (int i = 0; i < 100; i++) {
@@ -386,10 +386,10 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             sum += arrayList.get(i);
         }
         Log.i("weight", "平均值为"+sum/80);
-        if(((sum/80)-1154)>0){
-            fQuality = ((sum/80)-1154)*(100/17);
+        if(((sum/80)-1149)>0){
+            fQuality = ((sum/80)-1149)*(100/17);
         }else{
-            fQuality = -((sum/80)-1154)*(100/17);
+            fQuality = -((sum/80)-1149)*(100/17);
         }
         quality = Math.round(fQuality);
         Log.i("weight", "重量为"+quality);
@@ -806,17 +806,15 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         ToastUtils.showToast("收到喂食请求");
         Log.i("feed", "feedcount" + result.feedCount);
 
-        String count = result.feedCount;
-
 //        取出收到字符串中的第一个数字(正则)
 //        Pattern p = Pattern.compile("\\d+");
 //        Matcher m = p.matcher(count);
 //        m.find();
 //        int currentCount = Integer.parseInt(m.group());
 //        String count1 = count.substring(0,1);//取出收到字符串的第一个字符
-        int currentCount = Integer.parseInt(count);
-        Log.i("feed", "currentCount: "+currentCount);
-        if(currentCount>0){
+        int count = Integer.parseInt(result.feedCount);
+        Log.i("feed", "currentCount: "+count);
+        if(count>0){
             turn.turnRight();
             mBaseHandler.postDelayed(new Runnable() {
                 @Override
@@ -824,9 +822,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     turn.turnStop();
                     quality = getQuality();
                     getGroupMember(quality,SipConfig.getDevId());
-                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(currentCount*7.5),quality);
+                    float fOutQuality = Math.round(count*7.5);
+                    int outQuality = (int) fOutQuality;
+                    weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
                 }
-            },currentCount*12*1000);
+            },count*12*1000);
         }
     }
 
@@ -840,10 +840,25 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 turn.turnStop();
                 quality = getQuality();
                 getGroupMember(quality,SipConfig.getDevId());
-                weightDataToWeb(SipConfig.getDevId(),String.valueOf(3*7.5),quality);
-                //TODO 需要测量三十秒钟掉落了多少质量的粮食
+                int outQuality = (int)(3*7.5)+1;
+                weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
             }
         }, 36* 1000);
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                turn.turnRight();
+//                try {
+//                    Thread.sleep(5 * 1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                turn.turnStop();
+//                quality = getQuality();
+//                getGroupMember(quality,SipConfig.getDevId());
+//                weightDataToWeb(SipConfig.getDevId(),String.valueOf(3*7.5),quality);
+//            }
+//        }).start();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -861,9 +876,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 quality = getQuality();
                 getGroupMember(quality, SipConfig.getDevId());
                 saveOutedCount(feedPlanData.mCount);
-                weightDataToWeb(SipConfig.getDevId(),String.valueOf(feedPlanData.mCount*7.5),quality);
+                int outQuality = (int) Math.round(feedPlanData.mCount*7.5);
+                weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
             }
-            //TODO 每份旋转十秒
         },feedPlanData.mCount*12*1000);
     }
 
