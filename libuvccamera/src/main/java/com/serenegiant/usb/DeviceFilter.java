@@ -23,20 +23,20 @@
 
 package com.serenegiant.usb;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.content.Context;
 import android.content.res.Resources.NotFoundException;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class DeviceFilter {
 
@@ -62,12 +62,12 @@ public final class DeviceFilter {
 	public final boolean isExclude;
 
 	public DeviceFilter(final int vid, final int pid, final int clasz, final int subclass,
-			final int protocol, final String manufacturer, final String product, final String serialNum) {
+                        final int protocol, final String manufacturer, final String product, final String serialNum) {
 		this(vid, pid, clasz, subclass, protocol, manufacturer, product, serialNum, false);
 	}
 
 	public DeviceFilter(final int vid, final int pid, final int clasz, final int subclass,
-			final int protocol, final String manufacturer, final String product, final String serialNum, final boolean isExclude) {
+                        final int protocol, final String manufacturer, final String product, final String serialNum, final boolean isExclude) {
 		mVendorId = vid;
 		mProductId = pid;
 		mClass = clasz;

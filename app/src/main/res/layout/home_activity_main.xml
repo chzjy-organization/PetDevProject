@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.serenegiant.widget.UVCCameraTextureView
+    <com.serenegiant.usb.widget.UVCCameraTextureView
         android:id="@+id/camera_surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -41,7 +41,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="置零" />
+            android:text="录制" />
+
+        <Button
+            android:id="@+id/capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="截屏" />
     </LinearLayout>
 
 

@@ -1,5 +1,6 @@
 package com.punuo.sys.sdk.httplib.upload;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.punuo.sys.sdk.httplib.HttpManager;
@@ -29,7 +30,15 @@ public class UploadPictureManager {
     private UploadPictureRequest mUploadPictureRequest;
 
     public void uploadPicture(String path, String devId) {
-        if (mUploadPictureRequest != null && !mUploadPictureRequest.isFinish()) {
+        uploadPicture(path, devId, null);
+    }
+
+    public void uploadPicture(String path, String devId, RequestListener<UploadResult> listener) {
+//        if (mUploadPictureRequest != null && !mUploadPictureRequest.isFinish()) {
+//            return;
+//        }
+        if (TextUtils.isEmpty(path)) {
+            Log.i("UploadPictureManager", "path is empty");
             return;
         }
         File file = new File(path);
@@ -39,12 +48,17 @@ public class UploadPictureManager {
         mUploadPictureRequest = new UploadPictureRequest();
         mUploadPictureRequest.addEntityParam("photo", file);
         mUploadPictureRequest.addEntityParam("devid", devId);
+        mUploadPictureRequest.setRequestListener(listener);
         HttpManager.addRequest(mUploadPictureRequest);
     }
 
     private UploadVideoRequest mUploadVideoRequest;
     public void uploadVideo(String path, String devId) {
-        if (mUploadVideoRequest != null && !mUploadVideoRequest.isFinish()) {
+//        if (mUploadVideoRequest != null && !mUploadVideoRequest.isFinish()) {
+//            return;
+//        }
+        if (TextUtils.isEmpty(path)) {
+            Log.i("UploadPictureManager", "path is empty");
             return;
         }
         File file = new File(path);

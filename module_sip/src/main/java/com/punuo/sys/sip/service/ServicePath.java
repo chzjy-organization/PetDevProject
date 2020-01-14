@@ -26,5 +26,5 @@ public class ServicePath {
     public static final String PATH_RESET="/sip/dev_reset";
 
     public static final String PATH_MUSIC="/sip/play_music_response";
-
+    public static final String PATH_VOLUME="/sip/music_volume_response";
 }

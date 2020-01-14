@@ -25,14 +25,14 @@ package com.punuo.sys.app;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetFileDescriptor;
-import android.graphics.Bitmap;
 import android.hardware.usb.UsbDevice;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -48,7 +48,6 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.leplay.petwight.PetWeight;
@@ -57,6 +56,7 @@ import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.bluetooth.BluetoothChatService;
 import com.punuo.sys.app.bluetooth.Constants;
 import com.punuo.sys.app.bluetooth.PTOMessage;
+import com.punuo.sys.app.camera.UVCCameraHelper;
 import com.punuo.sys.app.detection.MotionDetector;
 import com.punuo.sys.app.detection.MotionDetectorCallback;
 import com.punuo.sys.app.feed.FeedData;
@@ -76,12 +76,12 @@ import com.punuo.sys.app.wifi.WifiController;
 import com.punuo.sys.app.wifi.WifiMessage;
 import com.punuo.sys.app.wifi.WifiUtil;
 import com.punuo.sys.sdk.PnApplication;
+import com.punuo.sys.sdk.activity.BaseActivity;
 import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.RequestListener;
 import com.punuo.sys.sdk.httplib.upload.UploadPictureManager;
 import com.punuo.sys.sdk.model.BaseModel;
 import com.punuo.sys.sdk.util.BaseHandler;
-import com.punuo.sys.sdk.util.BitmapUtil;
 import com.punuo.sys.sdk.util.CommonUtil;
 import com.punuo.sys.sdk.util.ToastUtils;
 import com.punuo.sys.sip.HeartBeatHelper;
@@ -95,20 +95,16 @@ import com.punuo.sys.sip.model.MusicData;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.ResetData;
 import com.punuo.sys.sip.model.VideoData;
+import com.punuo.sys.sip.model.VolumeData;
 import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 import com.punuo.sys.sip.video.H264Config;
-import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
-import com.serenegiant.usb.IFrameCallback;
 import com.serenegiant.usb.USBMonitor;
-import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
-import com.serenegiant.usb.USBMonitor.UsbControlBlock;
-import com.serenegiant.usb.UVCCamera;
-import com.serenegiant.usbcameracommon.AbstractUVCCameraHandler;
-import com.serenegiant.usbcameracommon.UVCCameraHandler;
-import com.serenegiant.widget.CameraViewInterface;
-import com.serenegiant.widget.UVCCameraTextureView;
+import com.serenegiant.usb.common.AbstractUVCCameraHandler;
+import com.serenegiant.usb.encoder.RecordParams;
+import com.serenegiant.usb.widget.CameraViewInterface;
+import com.serenegiant.usb.widget.UVCCameraTextureView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -117,36 +113,24 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class HomeActivity extends BaseActivity implements CameraDialog.CameraDialogParent, BaseHandler.MessageHandler {
+public class HomeActivity extends BaseActivity implements CameraDialog.CameraDialogParent,
+        BaseHandler.MessageHandler, CameraViewInterface.Callback {
     private static final boolean DEBUG = true;
     private static final String TAG = "HomeActivity";
     public static final int MSG_HEART_BEAR_VALUE = 10086;
-    private final Object mSync = new Object();
-    // for accessing USB and USB camera
-    private USBMonitor mUSBMonitor;
-    private UVCCamera mUVCCamera;
-    private UVCCameraTextureView mUVCCameraView;
-    private UVCCameraHandler mCameraHandler;
-    // for open&start / stop&close camera preview
-    private Surface mPreviewSurface;
-    private boolean isActive, isPreview;
     private NativeStreamer mNativeStreamer;
-
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothChatService mBluetoothChatService;
     private WifiManager mWifiManager;
     private TurnAndStop turn = new TurnAndStop();
     private LedControl ledControl;
-    private IntentFilter intentFilter;
     private NetworkChangeReceiver networkChangeReceiver;
     private BaseHandler mBaseHandler;
     private PetWeight mPetWeight;
@@ -154,6 +138,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private MediaPlayer mMediaPlayer;
     private static String quality;
 
+    private UVCCameraHelper mCameraHelper;
+    private UVCCameraTextureView mUVCCameraView;
+
+    private boolean isRequest;
+    private boolean isPreview;
+    private boolean started = false;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -162,30 +152,35 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         setContentView(R.layout.home_activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+        ProcessTasks.commonLaunchTasks(PnApplication.getInstance());
 
         mBaseHandler = new BaseHandler(this);
-        ProcessTasks.commonLaunchTasks(PnApplication.getInstance());
+        mUVCCameraView = findViewById(R.id.camera_surface_view);
+        initSurfaceViewSize();
+        mUVCCameraView.setCallback(this);
+
+        mCameraHelper = UVCCameraHelper.getInstance();
+        mCameraHelper.setDefaultFrameFormat(UVCCameraHelper.FRAME_FORMAT_MJPEG);
+        mCameraHelper.initUSBMonitor(this, mUVCCameraView, mConnectListener);
+
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothChatService = BluetoothChatService.getInstance(this, mBaseHandler);
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         ledControl = new LedControl();
-        intentFilter = new IntentFilter();
+        IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         networkChangeReceiver = new NetworkChangeReceiver();
         registerReceiver(networkChangeReceiver, intentFilter);
-
         mNativeStreamer = new NativeStreamer();
-        mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
-        mUVCCameraView = findViewById(R.id.camera_surface_view);
-        mCameraHandler = UVCCameraHandler.createHandler(this, mUVCCameraView, 1,
-                H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, 1);
-        initSurfaceViewSize();
         initDetection();
-        mUVCCameraView.setCallback(mSurfaceViewCallback);
-        EventBus.getDefault().register(this);
-        retryTimes = 0;
-
-
+        mCameraHelper.setOnPreviewFrameListener(data -> {
+            if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
+                mNativeStreamer.onPreviewFrame(data, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            }
+            if (mMotionDetector != null) {
+                mMotionDetector.consume(data, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            }
+        });
 
         findViewById(R.id.turn_right).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -210,7 +205,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             }
         });
 
-        findViewById(R.id.weight).setOnClickListener(new View.OnClickListener(){
+        findViewById(R.id.weight).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 /**
@@ -235,15 +230,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
             }
         });
-        findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                WeightReset weightReset = new WeightReset();
-//                weightReset.reset();
-            }
-        });
+        findViewById(R.id.reset).setOnClickListener(view -> recordMovie());
+        //截屏操作
+        findViewById(R.id.capture).setOnClickListener(view -> capturePicture());
 
-        Timer timer  = new Timer();
+        Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -252,27 +243,48 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 Log.i("plan", "开始设置0点闹钟");
 
             }
-        },0,24*60*60*1000);
+        }, 0, 24 * 60 * 60 * 1000);
+
+        EventBus.getDefault().register(this);
     }
 
-    public void playFromRawFile() {
-        try {
-            MediaPlayer player = new MediaPlayer();
-            AssetFileDescriptor file = getResources().openRawResourceFd(R.raw.abc);
-            try {
-                player.setDataSource(file.getFileDescriptor(), file.getStartOffset(), file.getLength());
-                file.close();
-                if (!player.isPlaying()) {
-                    player.prepare();
-                    player.start();
+    private UVCCameraHelper.OnMyDevConnectListener mConnectListener = new UVCCameraHelper.OnMyDevConnectListener() {
+        @Override
+        public void onAttachDev(UsbDevice device) {
+            // request open permission
+            if (!isRequest) {
+                isRequest = true;
+                if (mCameraHelper != null) {
+                    mCameraHelper.requestPermission(0);
                 }
-            } catch (IOException e) {
-                player = null;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-    }
+
+        @Override
+        public void onDettachDev(UsbDevice device) {
+            // close camera
+            if (isRequest) {
+                isRequest = false;
+                mCameraHelper.closeCamera();
+                ToastUtils.showToast(device.getDeviceName() + " is out");
+            }
+        }
+
+        @Override
+        public void onConnectDev(UsbDevice device, boolean isConnected) {
+            if (!isConnected) {
+                isPreview = false;
+            } else {
+                isPreview = true;
+                ToastUtils.showToast("connecting");
+            }
+        }
+
+        @Override
+        public void onDisConnectDev(UsbDevice device) {
+
+        }
+    };
 
     private long lastDetectorTime = 0; // 上一次检测到移动的时间
 
@@ -288,7 +300,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 long nowTime = System.currentTimeMillis();
                 if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
                     lastDetectorTime = nowTime;
-//                    shotPicture(bytes); //捕捉当前画面
+                    //视频不行的话就用图像吧。
+//                    capturePicture();//捕捉图像
                     recordMovie(); //捕捉视频
                 }
             }
@@ -300,110 +313,68 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         });
     }
 
-    private void shotPicture(byte[] bytes) {
-        Bitmap bitmap = BitmapUtil.createBitmap(bytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-        BitmapUtil.saveBitmapAsync(HomeActivity.this, bitmap, "/sdcard/DCIM/",
-                System.currentTimeMillis() + ".jpg", new BitmapUtil.SaveCallback() {
-                    @Override
-                    public void onSaveSuccess(String filePath) {
-                        //上传图片
-                        UploadPictureManager.getInstance().uploadPicture(filePath, SipConfig.getDevId());
-                    }
-
-                    @Override
-                    public void onSaveFail() {
-
-                    }
-                });
+    /**
+     * 截屏
+     */
+    private void capturePicture() {
+        if(mCameraHelper != null) {
+            String picPath = UVCCameraHelper.ROOT_PATH +"DCIM/"+ System.currentTimeMillis() + UVCCameraHelper.SUFFIX_JPEG;
+            mCameraHelper.capturePicture(picPath, path -> {
+                UploadPictureManager.getInstance().uploadPicture(picPath, SipConfig.getDevId());
+            });
+        }
     }
 
     private void recordMovie() {
-        if (mUVCCamera != null) {
-            mCameraHandler.setUVCCamera(mUVCCamera);
-            mCameraHandler.addCallback(mCameraCallback);
-            if (checkPermissionWriteExternalStorage() && checkPermissionAudio()) {
-                if (!mCameraHandler.isRecording()) {
-                    mCameraHandler.startRecording();
-                    mUVCCameraView.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mCameraHandler.stopRecording();
-                        }
-                    }, 10 * 1000); //录制10s
+        String videoPath = UVCCameraHelper.ROOT_PATH +"Movies/"+ System.currentTimeMillis() + UVCCameraHelper.SUFFIX_MP4;
+        if (!mCameraHelper.isPushing()) {
+            RecordParams params = new RecordParams();
+            params.setRecordPath(videoPath);
+            params.setRecordDuration(0);
+            params.setVoiceClose(false);
+            mCameraHelper.startPusher(params, new AbstractUVCCameraHandler.OnEncodeResultListener() {
+                @Override
+                public void onEncodeResult(byte[] data, int offset, int length, long timestamp, int type) {
                 }
-            }
+
+                @Override
+                public void onRecordResult(String videoPath) {
+                    UploadPictureManager.getInstance().uploadVideo(videoPath, SipConfig.getDevId());
+                }
+            });
+            mBaseHandler.postDelayed(() -> {
+                mCameraHelper.stopPusher();
+            }, 10 * 1000);
         }
     }
 
-    private AbstractUVCCameraHandler.CameraCallback mCameraCallback = new AbstractUVCCameraHandler.CameraCallback() {
-        @Override
-        public void onOpen() {
-
-        }
-
-        @Override
-        public void onClose() {
-
-        }
-
-        @Override
-        public void onStartPreview() {
-
-        }
-
-        @Override
-        public void onStopPreview() {
-
-        }
-
-        @Override
-        public void onStartRecording() {
-
-        }
-
-        @Override
-        public void onStopRecording(String url) {
-            mUVCCameraView.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    UploadPictureManager.getInstance().uploadVideo(url, SipConfig.getDevId());
-                    Log.i(TAG, "开始上传视频");
-                }
-            }, 1000); //延迟1s 省的文件还没有生成。
-        }
-
-        @Override
-        public void onError(Exception e) {
-
-        }
-    };
-
     private AlarmManager alarmManager;
-    public void setZeroClock(){
+
+    public void setZeroClock() {
         alarmManager = (AlarmManager) PnApplication.getInstance().getSystemService(Context.ALARM_SERVICE);
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH)+1);
-        calendar.set(Calendar.HOUR_OF_DAY,0);
-        calendar.set(Calendar.MINUTE,0);
-        calendar.set(Calendar.SECOND,0);
-        calendar.set(Calendar.MILLISECOND,0);
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         long time = calendar.getTimeInMillis();
 
         Intent intent = new Intent();
         intent.setAction("com.punuo.sys.app.SETZEROFEED");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,0,intent,0);
-        alarmManager.set(AlarmManager.RTC_WAKEUP,time,pendingIntent);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, time, pendingIntent);
         Log.i("plan", "0点闹钟设置完成 ");
     }
 
-    public String getQuality(){
+    public String getQuality() {
         int sum = 0;
         int one_quality;//单次称重
         float fQuality;
         double quality;
         ArrayList<Integer> arrayList = new ArrayList<>();
         mPetWeight = new PetWeight();
-        for (int i = 0;i<100;i++){
+        for (int i = 0; i < 100; i++) {
             one_quality = mPetWeight.getWeight();
             arrayList.add(one_quality);
         }
@@ -430,7 +401,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
      */
     private GetGroupMemberRequest mGetGroupMemberRequest;
     private List<GroupMemberModel.Member> mMembers = new ArrayList<>();
-    public void getGroupMember(String quality,String devId) {
+
+    public void getGroupMember(String quality, String devId) {
         if (mGetGroupMemberRequest != null && !mGetGroupMemberRequest.isFinish()) {
             return;
         }
@@ -448,7 +420,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     return;
                 }
                 if (result.members != null && !result.members.isEmpty()) {
-                    weightToSipServer(quality,result.members);
+                    weightToSipServer(quality, result.members);
                 }
             }
 
@@ -461,7 +433,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     //将数据发送到Sip服务器
-    public void weightToSipServer(String quality,List<GroupMemberModel.Member> members){
+    public void weightToSipServer(String quality, List<GroupMemberModel.Member> members) {
         SipGetWeightRequest getWeightRequest = new SipGetWeightRequest(quality, members);
         SipDevManager.getInstance().addRequest(getWeightRequest);
         Log.i("weight", "称重信息发送中...... ");
@@ -485,7 +457,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         ledControl.turnOnCustom2Light();
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        if (networkInfo == null ) {
+        if (networkInfo == null) {
             WifiAdmin wifiAdmin = new WifiAdmin(HomeActivity.this);
             wifiAdmin.openWifi();
             WifiConfiguration wcg = wifiAdmin.CreateWifiInfo("admin", "12345678", 3);
@@ -513,7 +485,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private void startPushError() {
         if (retryTimes < 5) {
             Log.i(TAG, "encodeStart: 开启推流失败,正在重试,次数: " + retryTimes + " 次");
-            queueEvent(new Runnable() {
+            mBaseHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     encodeStart();
@@ -532,108 +504,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Override
     protected void onDestroy() {
         if (DEBUG) Log.v(TAG, "onDestroy:");
-        synchronized (mSync) {
-            isActive = isPreview = false;
-            if (mUVCCamera != null) {
-                mUVCCamera.destroy();
-                mUVCCamera = null;
-            }
-            if (mUSBMonitor != null) {
-                mUSBMonitor.destroy();
-                mUSBMonitor = null;
-            }
+        if (mCameraHelper != null) {
+            mCameraHelper.release();
         }
         mUVCCameraView = null;
         EventBus.getDefault().unregister(this);
         unregisterReceiver(networkChangeReceiver);
         super.onDestroy();
     }
-
-    private final OnDeviceConnectListener mOnDeviceConnectListener = new OnDeviceConnectListener() {
-        @Override
-        public void onAttach(final UsbDevice device) {
-            List<UsbDevice> deviceList = mUSBMonitor.getDeviceList();
-            if (!deviceList.isEmpty()) {
-                UsbDevice usbDevice = deviceList.get(0);
-                mUSBMonitor.requestPermission(usbDevice);
-            }
-        }
-
-        @Override
-        public void onConnect(final UsbDevice device, final UsbControlBlock ctrlBlock, final boolean createNew) {
-            synchronized (mSync) {
-                if (mUVCCamera != null) {
-                    mUVCCamera.destroy();
-                }
-                isActive = isPreview = false;
-            }
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (mSync) {
-                        final UVCCamera camera = new UVCCamera();
-                        camera.open(ctrlBlock);
-                        if (DEBUG) Log.i(TAG, "supportedSize:" + camera.getSupportedSize());
-                        try {
-                            camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
-//                            camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
-                        } catch (final IllegalArgumentException e) {
-                            try {
-                                // fallback to YUV mode
-//                                camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.FRAME_FORMAT_MJPEG);
-                                camera.setPreviewSize(H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
-                            } catch (final IllegalArgumentException e1) {
-                                camera.destroy();
-                                return;
-                            }
-                        }
-                        mPreviewSurface = mUVCCameraView.getSurface();
-                        if (mPreviewSurface != null) {
-                            isActive = true;
-                            camera.setPreviewDisplay(mPreviewSurface);
-                            camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_YUV420SP);
-                            camera.startPreview();
-                            isPreview = true;
-                        }
-                        synchronized (mSync) {
-                            mUVCCamera = camera;
-                        }
-                    }
-                }
-            }, 0);
-        }
-
-        @Override
-        public void onDisconnect(final UsbDevice device, final UsbControlBlock ctrlBlock) {
-            if (DEBUG) Log.v(TAG, "onDisconnect:");
-            // XXX you should check whether the comming device equal to camera device that currently using
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (mSync) {
-                        if (mUVCCamera != null) {
-                            mUVCCamera.close();
-                            if (mPreviewSurface != null) {
-                                mPreviewSurface.release();
-                                mPreviewSurface = null;
-                            }
-                            isActive = isPreview = false;
-                        }
-                    }
-                }
-            }, 0);
-        }
-
-        @Override
-        public void onDettach(final UsbDevice device) {
-            if (DEBUG) Log.v(TAG, "onDettach:");
-            Toast.makeText(HomeActivity.this, "USB_DEVICE_DETACHED", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onCancel(final UsbDevice device) {
-        }
-    };
 
     /**
      * to access from CameraDialog
@@ -642,78 +520,21 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
      */
     @Override
     public USBMonitor getUSBMonitor() {
-        return mUSBMonitor;
+        return mCameraHelper.getUSBMonitor();
     }
 
     @Override
     public void onDialogResult(boolean canceled) {
-        if (canceled) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // FIXME
-                }
-            }, 0);
-        }
+
     }
-    private final CameraViewInterface.Callback mSurfaceViewCallback = new CameraViewInterface.Callback() {
-        @Override
-        public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
-            if (DEBUG) Log.v(TAG, "surfaceCreated:");
-        }
-
-        @Override
-        public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
-            if ((width == 0) || (height == 0)) return;
-            if (DEBUG) Log.v(TAG, "surfaceChanged:");
-            mPreviewSurface = surface;
-            synchronized (mSync) {
-                if (isActive && !isPreview && (mUVCCamera != null)) {
-                    mUVCCamera.setPreviewDisplay(mPreviewSurface);
-                    mUVCCamera.startPreview();
-                    isPreview = true;
-                }
-            }
-        }
-
-        @Override
-        public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
-            if (DEBUG) Log.v(TAG, "surfaceDestroyed:");
-            synchronized (mSync) {
-                if (mUVCCamera != null) {
-                    mUVCCamera.stopPreview();
-                }
-                isPreview = false;
-            }
-            mPreviewSurface = null;
-        }
-    };
-    private boolean started = false;
-    private byte[] mBytes = new byte[H264Config.VIDEO_WIDTH * H264Config.VIDEO_HEIGHT * 3 / 2];
 
 
-    private IFrameCallback mIFrameCallback = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-            mBytes = new byte[frame.remaining()];
-            frame.get(mBytes, 0, mBytes.length);
-            if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
-                mNativeStreamer.onPreviewFrame(mBytes, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-            }
-            if (mMotionDetector != null) {
-                mMotionDetector.consume(mBytes,  H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-            }
-            if (mCameraHandler != null && mCameraHandler.getCameraThread() != null) {
-                mCameraHandler.getCameraThread().onFrame(frame);
-            }
-        }
-    };
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
         started = false;
         ToastUtils.showToast("停止推流");
-        queueEvent(new Runnable() {
+        mBaseHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 encodeStop();
@@ -866,25 +687,37 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(ResetData result){
+    public void onMessageEvent(ResetData result) {
         Back();
     }
 
-    private void Back(){
-    super.onBackPressed();
-}
+    private void Back() {
+        super.onBackPressed();
+    }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(VolumeData result){
+        AudioManager am = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
+        if(TextUtils.equals(result.volume,"raise")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_RAISE, 0);
+        }
+        if(TextUtils.equals(result.volume,"lower")){
+            am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_LOWER, 0);
+        }
+    }
     //接收WiFi账号密码连接WiFi
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(WiFiData result){
+    public void onMessageEvent(WiFiData result) {
         WifiAdmin wifiAdmin = new WifiAdmin(HomeActivity.this);
         wifiAdmin.openWifi();
         WifiConfiguration wcg = wifiAdmin.CreateWifiInfo(result.admin, result.password, 3);
         wifiAdmin.addNetwork(wcg);
-        Log.d("HomeActivity","wifi set success");
+        Log.d("HomeActivity", "wifi set success");
     }
 
-    public void setDiscoverableTimeout(int timeout){
+    public void setDiscoverableTimeout(int timeout) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         try {
             Method setDiscoverableTimeout = BluetoothAdapter.class.getMethod("setDiscoverableTimeout", int.class);
@@ -901,6 +734,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             e.printStackTrace();
         }
     }
+
     private int clo = 0;
 
     public void spark() {
@@ -917,17 +751,40 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                             clo = 1;
                             ledControl.turnOnCustom1Light();
                         } else {
-                            if (networkInfo != null && networkInfo.isAvailable()) { clo=0;}
+                            if (networkInfo != null && networkInfo.isAvailable()) {
+                                clo = 0;
+                            }
                             if (clo == 1) {
                                 clo = 0;
                                 ledControl.turnOffCustom1Light();
-                                }
+                            }
                         }
                     }
                 });
             }
         };
         timer.schedule(taskcc, 1, 300);
+    }
+
+    @Override
+    public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
+        if (!isPreview && mCameraHelper.isCameraOpened()) {
+            mCameraHelper.startPreview(mUVCCameraView);
+            isPreview = true;
+        }
+    }
+
+    @Override
+    public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {
+
+    }
+
+    @Override
+    public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
+        if (isPreview && mCameraHelper.isCameraOpened()) {
+            mCameraHelper.stopPreview();
+            isPreview = false;
+        }
     }
 
     public class NetworkChangeReceiver extends BroadcastReceiver {
@@ -940,14 +797,17 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             } else {
                 ledControl.turnOffCustom1Light();
             }
+            if (!mBaseHandler.hasMessages(MSG_HEART_BEAR_VALUE)) {
+                registerDev();
+            }
         }
     }
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void feedNow(FeedNotifyData result){
+    public void feedNow(FeedNotifyData result) {
         ToastUtils.showToast("收到喂食请求");
-        Log.i("feed", "feedcount"+result.feedCount);
+        Log.i("feed", "feedcount" + result.feedCount);
 
         String count = result.feedCount;
 
@@ -995,14 +855,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(FeedPlanData feedPlanData){
+    public void onMessageEvent(FeedPlanData feedPlanData) {
         turn.turnRight();
         mBaseHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 turn.turnStop();
                 quality = getQuality();
-                getGroupMember(quality,SipConfig.getDevId());
+                getGroupMember(quality, SipConfig.getDevId());
                 saveOutedCount(feedPlanData.mCount);
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(feedPlanData.mCount*7.5),quality);
             }
@@ -1014,13 +874,14 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
      * 将计划中喂食过后的份数反馈到服务器
      */
     private SaveOutedRequest mSaveOutedRequest;
-    public void saveOutedCount(int count){
-        if (mSaveOutedRequest!=null&&!mSaveOutedRequest.isFinish()){
+
+    public void saveOutedCount(int count) {
+        if (mSaveOutedRequest != null && !mSaveOutedRequest.isFinish()) {
             return;
         }
         mSaveOutedRequest = new SaveOutedRequest();
-        mSaveOutedRequest.addUrlParam("devid",SipConfig.getDevId());
-        mSaveOutedRequest.addUrlParam("amount",count);
+        mSaveOutedRequest.addUrlParam("devid", SipConfig.getDevId());
+        mSaveOutedRequest.addUrlParam("amount", count);
         mSaveOutedRequest.setRequestListener(new RequestListener<BaseModel>() {
             @Override
             public void onComplete() {
@@ -1029,7 +890,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
             @Override
             public void onSuccess(BaseModel result) {
-                Log.i(TAG, result.success+result.message);
+                Log.i(TAG, result.success + result.message);
             }
 
             @Override
@@ -1042,6 +903,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     /**
      * 接受音乐
+     *
      * @param musicData
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1070,11 +932,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
 
     private WeightDataToServerRequest mWeightDataToServerRequest;
-    public void weightDataToWeb(String devid,String eatWeight,String leftedWeight){
+
+    public void weightDataToWeb(String devid, String eatWeight, String leftedWeight) {
         mWeightDataToServerRequest = new WeightDataToServerRequest();
-        mWeightDataToServerRequest.addUrlParam("devid",devid);
-        mWeightDataToServerRequest.addUrlParam("eatWeight",eatWeight);
-        mWeightDataToServerRequest.addUrlParam("leftedWeight",leftedWeight);
+        mWeightDataToServerRequest.addUrlParam("devid", devid);
+        mWeightDataToServerRequest.addUrlParam("eatWeight", eatWeight);
+        mWeightDataToServerRequest.addUrlParam("leftedWeight", leftedWeight);
         mWeightDataToServerRequest.setRequestListener(new RequestListener<BaseModel>() {
             @Override
             public void onComplete() {
@@ -1096,16 +959,26 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
 
     private boolean isFirst = true;
+
     @Override
     protected void onResume() {
         super.onResume();
-        if (mUSBMonitor != null) {
-            mUSBMonitor.register();
-        }
         if (isFirst) {
             init();
             registerDev();
+            mBaseHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mCameraHelper != null) {
+                        mCameraHelper.registerUSB();
+                    }
+                }
+            }, 1000); //延迟1s去初始化摄像头
             isFirst = false;
+        } else {
+            if (mCameraHelper != null) {
+                mCameraHelper.registerUSB();
+            }
         }
         if (mMotionDetector != null) {
             mMotionDetector.onResume();
@@ -1115,8 +988,8 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Override
     protected void onPause() {
         super.onPause();
-        if (mUSBMonitor != null) {
-            mUSBMonitor.unregister();
+        if (mCameraHelper != null) {
+            mCameraHelper.unregisterUSB();
         }
         if (mMotionDetector != null) {
             mMotionDetector.onPause();
