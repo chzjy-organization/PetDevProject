@@ -6,6 +6,7 @@ import android.hardware.usb.UsbDevice;
 import android.os.Environment;
 
 import com.punuo.sys.app.R;
+import com.punuo.sys.sip.video.H264Config;
 import com.serenegiant.usb.DeviceFilter;
 import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
@@ -29,8 +30,8 @@ public class UVCCameraHelper {
     public static final String SUFFIX_JPEG = ".jpg";
     public static final String SUFFIX_MP4 = ".mp4";
     private static final String TAG = "UVCCameraHelper";
-    private int previewWidth = 640;
-    private int previewHeight = 480;
+    private int previewWidth = H264Config.VIDEO_WIDTH;
+    private int previewHeight = H264Config.VIDEO_HEIGHT;
     public static final int FRAME_FORMAT_YUYV = UVCCamera.FRAME_FORMAT_YUYV;
     // Default using MJPEG
     // if your device is connected,but have no images
