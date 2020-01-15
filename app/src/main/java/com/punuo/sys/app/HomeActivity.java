@@ -298,7 +298,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             public void onMotionDetected(byte[] bytes) {
                 Log.i(TAG, "onMotionDetected: 监测到移动");
                 long nowTime = System.currentTimeMillis();
-                if (nowTime - lastDetectorTime > 1 * 60 * 1000) {
+                if (nowTime - lastDetectorTime > 5 * 60 * 1000) {
                     lastDetectorTime = nowTime;
                     //视频不行的话就用图像吧。
 //                    capturePicture();//捕捉图像
@@ -828,6 +828,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     float fOutQuality = Math.round(count*7.5);
                     int outQuality = (int) fOutQuality;
                     weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
+                    Back();
                 }
             },count*12*1000);
         }
@@ -845,6 +846,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 getGroupMember(quality,SipConfig.getDevId());
                 int outQuality = (int)(3*7.5)+1;
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
+                Back();
             }
         }, 36* 1000);
 //        new Thread(new Runnable() {
@@ -881,6 +883,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 saveOutedCount(feedPlanData.mCount);
                 int outQuality = (int) Math.round(feedPlanData.mCount*7.5);
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
+                Back();
             }
         },feedPlanData.mCount*12*1000);
     }
