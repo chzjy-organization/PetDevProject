@@ -386,10 +386,10 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             sum += arrayList.get(i);
         }
         Log.i("weight", "平均值为"+sum/80);
-        if(((sum/80)-1149)>0){
-            fQuality = ((sum/80)-1149)*(100/17);
+        if(((sum/80)-1105)>0){
+            fQuality = ((sum/80)-1105)*(100/17);
         }else{
-            fQuality = -((sum/80)-1149)*(100/17);
+            fQuality = -((sum/80)-1105)*(100/17);
         }
         quality = Math.round(fQuality);
         Log.i("weight", "重量为"+quality);
@@ -829,7 +829,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     int outQuality = (int) fOutQuality;
                     weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
                 }
-            },count*12*1000);
+            },count*12*1042);
         }
     }
 
@@ -846,7 +846,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 int outQuality = (int)(3*7.5)+1;
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
             }
-        }, 36* 1000);
+        }, 36* 1042);
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -882,7 +882,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 int outQuality = (int) Math.round(feedPlanData.mCount*7.5);
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
             }
-        },feedPlanData.mCount*12*1000);
+        },feedPlanData.mCount*12*1042);
     }
 
     /**
