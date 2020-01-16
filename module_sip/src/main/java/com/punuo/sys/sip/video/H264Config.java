@@ -8,12 +8,12 @@ public class H264Config {
     /**
      * Default video width
      */
-    public final static int VIDEO_WIDTH = 320;
+    public final static int VIDEO_WIDTH = 640;
 
     /**
      * Default video height
      */
-    public final static int VIDEO_HEIGHT = 240;
+    public final static int VIDEO_HEIGHT = 480;
 
     /**
      * Default video frame rate
@@ -23,5 +23,8 @@ public class H264Config {
      * Default video type
      */
     public final static int VIDEO_TYPE = 2;
-
+    /**
+     * Default video rtmp address
+     */
+    public static String RTMP_STREAM = "rtmp://101.69.255.130:1936/hls/live";
 }

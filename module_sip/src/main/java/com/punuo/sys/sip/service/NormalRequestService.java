@@ -1,8 +1,11 @@
 package com.punuo.sys.sip.service;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.punuo.sys.sdk.httplib.JsonUtil;
 import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.request.SipResponseRequest;
@@ -23,7 +26,13 @@ public abstract class NormalRequestService<T> implements SipRequestService {
     @Override
     public void handleRequest(Message msg, JsonElement jsonElement) {
         try {
-            T result = jsonParse(jsonElement, jsonElement.getAsJsonObject().toString());
+            JsonObject json = null;
+            if (jsonElement.isJsonObject()) {
+                json = jsonElement.getAsJsonObject();
+            }else {
+                json = new JsonObject();
+            }
+            T result = jsonParse(json, json.toString());
             onSuccess(msg, result);
         } catch (Exception e) {
             e.printStackTrace();

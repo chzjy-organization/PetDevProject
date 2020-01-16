@@ -24,7 +24,7 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi"
+            abiFilters "armeabi", "armeabi-v7a","x86"
         }
     }
     buildTypes {
@@ -51,10 +51,18 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':basesdk')
     implementation project(':module_sip')
+    implementation files('libs/PetWeight.jar')
+    implementation project(':module_motion_detection')
 }

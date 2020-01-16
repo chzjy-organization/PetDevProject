@@ -9,6 +9,29 @@
         android:id="@+id/setting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="设置"/>
+        android:text="设置1"/>
 
+    <Button
+        android:id="@+id/turn_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="转动"/>
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="停止"/>
+
+    <Button
+        android:id="@+id/weight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="称重"/>
+
+    <Button
+        android:id="@+id/reset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="置零"/>
 </LinearLayout>

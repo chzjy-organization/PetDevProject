@@ -16,4 +16,9 @@ public class UploadResult {
 
     @SerializedName("url")
     public String url;
+    @SerializedName("database")
+    public String database;
+
+    @SerializedName("deletefile")
+    public boolean aBoolean;
 }

@@ -3,7 +3,7 @@ ext.sdk = [
         packageName         : 'com.punuo.sys.app',
         versionCode         : 1,
         versionName         : "1.0.0",
-        minSdkVersion       : 19,
+        minSdkVersion       : 21,
         targetSdkVersion    : 21,
         compileSdkVersion   : 28,
         buildToolsVersion   : '28.0.3',

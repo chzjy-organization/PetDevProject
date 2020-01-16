@@ -58,10 +58,11 @@ public class ProcessTasks {
         SipConfig.init(new ISipConfig() {
             NameAddress mServerAddress;
             NameAddress mDevNormalAddress;
+
             @Override
             public String getServerIp() {
-                return "101.69.255.134";
-            }
+                return "39.98.36.250";
+            }//101.69.255.134
 
             @Override
             public int getPort() {
@@ -70,7 +71,7 @@ public class ProcessTasks {
 
             @Override
             public String getDevId() {
-                return "310023001139940001";
+                return "310023004901920001";//310023001139940001
             }
 
             @Override

@@ -110,39 +110,57 @@ public class SipDevManager extends SipProvider {
     public synchronized void onReceivedMessage(Transport transport, Message msg) {
         Log.v(TAG, "<----------received sip message---------->");
         Log.v(TAG, msg.toString());
-        handleMessage(msg);
+        try {
+            handleMessage(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            SipServiceManager.getInstance().handleRequest("error", "{}", msg);
+        }
     }
 
     private void handleMessage(Message message) {
-        int code = message.getStatusLine().getCode();
-        switch (code) {
-            case 200:
-                String body = message.getBody();
-                if (!TextUtils.isEmpty(body)) {
-                    XmlToJson xmlToJson = new XmlToJson.Builder(body).build();
-                    String parse = xmlToJson.toString();
-                    Log.d("SipRequest", "deliverResponse: \n" + parse);
-                    JsonElement data = null;
-                    try {
-                        data = new JsonParser().parse(parse);
-                        handle(message, data);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    String method = message.getMethodId().toString();
-                    switch (method) { //不需要解析的可以加这里
-                        case SipMethods.ACK:
-                            return;
-                        default:
-                            SipServiceManager.getInstance().handleRequest(method.toLowerCase(), "{}", message);
-                            return;
-                    }
-                }
-                break;
-            default:
-                SipServiceManager.getInstance().handleRequest("error", "{}", message);
-                break;
+        if (message.isResponse()) {
+            int code = message.getStatusLine().getCode();
+            switch (code) {
+                case 200:
+                    parseMessage(message);
+                    break;
+                default:
+                    SipServiceManager.getInstance().handleRequest("error", "{}", message);
+                    break;
+            }
+        } else if (message.isNotify()) {
+            parseMessage(message);
+        } else if (message.isRequest()) {
+            parseMessage(message);
+        } else {
+            SipServiceManager.getInstance().handleRequest("error", "{}", message);
+        }
+    }
+
+    private void parseMessage(Message message) {
+        String body = message.getBody();
+        if (!TextUtils.isEmpty(body)) {
+            XmlToJson xmlToJson = new XmlToJson.Builder(body).build();
+            String parse = xmlToJson.toString();
+            Log.d("SipRequest", "deliverResponse: \n" + parse);
+            JsonElement data = null;
+            try {
+                data = new JsonParser().parse(parse);
+                handle(message, data);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            String method = message.getMethodId().toString();
+            switch (method) { //不需要解析的可以加这里
+                case SipMethods.ACK:
+                case SipMethods.BYE:
+                    return;
+                default:
+                    SipServiceManager.getInstance().handleRequest(method.toLowerCase(), "{}", message);
+                    return;
+            }
         }
     }
 
