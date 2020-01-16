@@ -828,7 +828,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                     float fOutQuality = Math.round(count*7.5);
                     int outQuality = (int) fOutQuality;
                     weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
-                    Back();
                 }
             },count*12*1000);
         }
@@ -846,7 +845,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 getGroupMember(quality,SipConfig.getDevId());
                 int outQuality = (int)(3*7.5)+1;
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
-                Back();
             }
         }, 36* 1000);
 //        new Thread(new Runnable() {
@@ -883,7 +881,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 saveOutedCount(feedPlanData.mCount);
                 int outQuality = (int) Math.round(feedPlanData.mCount*7.5);
                 weightDataToWeb(SipConfig.getDevId(),String.valueOf(outQuality),quality);
-                Back();
             }
         },feedPlanData.mCount*12*1000);
     }
