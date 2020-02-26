@@ -4,14 +4,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.punuo.sys.app.feed.FeedData;
 import com.punuo.sys.sdk.util.ToastUtils;
 
 import org.greenrobot.eventbus.EventBus;
 
 public class FeedBroadcast extends BroadcastReceiver {
 
-    private FeedData feedData = new FeedData();
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -20,7 +18,7 @@ public class FeedBroadcast extends BroadcastReceiver {
             if (intent.getExtras() != null) {
                 boolean down = intent.getExtras().getBoolean("down");
                 if (down) {
-                    EventBus.getDefault().post(feedData);
+                    EventBus.getDefault().post(new FeedData());
                 }
             }
         }

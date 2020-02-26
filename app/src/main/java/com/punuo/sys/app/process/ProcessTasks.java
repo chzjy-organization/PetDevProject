@@ -8,9 +8,9 @@ import com.punuo.sys.sdk.httplib.HttpManager;
 import com.punuo.sys.sdk.httplib.IHttpConfig;
 import com.punuo.sys.sdk.util.DebugCrashHandler;
 import com.punuo.sys.sdk.util.DeviceHelper;
+import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.config.ISipConfig;
 import com.punuo.sys.sip.config.SipConfig;
-import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.thread.SipInitThread;
 
 import org.zoolu.sip.address.NameAddress;
