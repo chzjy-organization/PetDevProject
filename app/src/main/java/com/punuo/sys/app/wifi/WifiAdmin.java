@@ -1,13 +1,13 @@
 package com.punuo.sys.app.wifi;
 
-import java.util.List;
-
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+
+import java.util.List;
 
 public class WifiAdmin {
 
@@ -26,8 +26,7 @@ public class WifiAdmin {
     // 构造器
     public WifiAdmin(Context context) {
         // 取得WifiManager对象
-        mWifiManager = (WifiManager) context
-                .getSystemService(Context.WIFI_SERVICE);
+        mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         // 取得WifiInfo对象
         mWifiInfo = mWifiManager.getConnectionInfo();
     }
