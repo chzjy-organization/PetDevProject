@@ -1,12 +1,13 @@
 package com.punuo.sys.sip.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.punuo.sys.sdk.model.BaseModel;
 
 /**
  * Created by han.chen.
  * Date on 2019-11-23.
  **/
-public class FeedPlan {
+public class FeedPlan extends BaseModel {
     @SerializedName("userName")
     public String userName;
     //设定的时间

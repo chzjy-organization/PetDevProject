@@ -9,7 +9,7 @@ public class GroupMemberModel extends BaseModel {
     @SerializedName("userids")
     public List<Member> members;
 
-    public static class Member{
+    public static class Member extends BaseModel {
         @SerializedName("userid")
         public String userid;
     }

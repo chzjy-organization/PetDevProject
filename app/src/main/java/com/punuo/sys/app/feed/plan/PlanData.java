@@ -1,8 +1,9 @@
 package com.punuo.sys.app.feed.plan;
 
 import com.google.gson.annotations.SerializedName;
+import com.punuo.sys.sdk.model.BaseModel;
 
-public class Plan {
+public class PlanData extends BaseModel {
     @SerializedName("time")
     private long planTime;
     @SerializedName("name")
@@ -10,7 +11,7 @@ public class Plan {
     @SerializedName("count")
     private String planCount;
 
-    public Plan(long planTime,String planName,String planCount){
+    public PlanData(long planTime, String planName, String planCount){
         this.planTime = planTime;
         this.planName = planName;
         this.planCount = planCount;

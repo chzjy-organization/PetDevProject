@@ -1,9 +1,9 @@
 package com.punuo.sys.app.feed.plan;
 
 
-public class FeedPlanData {
+public class FeedPlanEvent {
     public int mCount;
-    public FeedPlanData(int count){
+    public FeedPlanEvent(int count){
         mCount = count;
     }
 }

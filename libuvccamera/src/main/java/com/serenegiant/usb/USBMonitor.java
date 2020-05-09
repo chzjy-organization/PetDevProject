@@ -578,7 +578,6 @@ public final class USBMonitor {
 		public void run() {
 			if (destroyed) return;
 			final List<UsbDevice> devices = getDeviceList();
-			Log.i("han.chen", "usb设备的数量 = " + devices.size());
 			final int n = devices.size();
 			final int hasPermissionCounts;
 			final int m;

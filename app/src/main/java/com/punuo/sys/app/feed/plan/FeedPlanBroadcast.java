@@ -8,7 +8,7 @@ import android.util.Log;
 import org.greenrobot.eventbus.EventBus;
 
 public class FeedPlanBroadcast extends BroadcastReceiver {
-    private FeedPlanData feedPlanData;
+    private FeedPlanEvent mFeedPlanEvent;
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -16,9 +16,9 @@ public class FeedPlanBroadcast extends BroadcastReceiver {
         Log.i("plan", "收到intent的count "+sCount);
         int count = Integer.parseInt(sCount);
         Log.i("plan", ""+count);
-        feedPlanData = new FeedPlanData(count);
+        mFeedPlanEvent = new FeedPlanEvent(count);
         if ("com.punuo.sys.app.FEED".equals(action)){
-            EventBus.getDefault().post(feedPlanData);
+            EventBus.getDefault().post(mFeedPlanEvent);
         }
     }
 }

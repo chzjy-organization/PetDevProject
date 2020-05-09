@@ -726,7 +726,7 @@ static void _uvc_process_payload(uvc_stream_handle_t *strmh, const uint8_t *payl
 		if (UNLIKELY(header_info & UVC_STREAM_ERR)) {
 //			strmh->bfh_err |= UVC_STREAM_ERR;
 			UVC_DEBUG("bad packet: error bit set");
-			libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
+			//libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
 //			uvc_vc_get_error_code(strmh->devh, &vc_error_code, UVC_GET_CUR);
 			uvc_vs_get_error_code(strmh->devh, &vs_error_code, UVC_GET_CUR);
 //			return;
@@ -826,7 +826,7 @@ static inline void _uvc_process_payload_iso(uvc_stream_handle_t *strmh, struct l
 		if (UNLIKELY(pkt->status != 0)) {
 			MARK("bad packet:status=%d,actual_length=%d", pkt->status, pkt->actual_length);
 			strmh->bfh_err |= UVC_STREAM_ERR;
-			libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
+			//libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
 //			uvc_vc_get_error_code(strmh->devh, &vc_error_code, UVC_GET_CUR);
 //			uvc_vs_get_error_code(strmh->devh, &vs_error_code, UVC_GET_CUR);
 			continue;
@@ -866,7 +866,7 @@ static inline void _uvc_process_payload_iso(uvc_stream_handle_t *strmh, struct l
 				if (UNLIKELY(header_info & UVC_STREAM_ERR)) {
 //					strmh->bfh_err |= UVC_STREAM_ERR;
 					MARK("bad packet:status=0x%2x", header_info);
-					libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
+					//libusb_clear_halt(strmh->devh->usb_devh, strmh->stream_if->bEndpointAddress);
 //					uvc_vc_get_error_code(strmh->devh, &vc_error_code, UVC_GET_CUR);
 					uvc_vs_get_error_code(strmh->devh, &vs_error_code, UVC_GET_CUR);
 					continue;

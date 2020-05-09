@@ -39,7 +39,7 @@
 
         <activity
             android:name=".HomeActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="fullSensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
@@ -52,25 +52,12 @@
         </activity>
 
         <receiver
-            android:name=".led.ButtonBroadcast"
+            android:name=".receiver.ActionBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.petrobot.action.WIFIBT_KEY" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".PairingRequest"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter android:priority="1000">
-                <action android:name="android.bluetooth.device.action.PAIRING_REQUEST" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".feed.FeedBroadcast"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
+                <action android:name="android.media.VOLUME_CHANGED_ACTION"/>
                 <action android:name="android.petrobot.action.FEED_KEY"/>
             </intent-filter>
         </receiver>
