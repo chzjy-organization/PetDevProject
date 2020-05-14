@@ -6,6 +6,7 @@ import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.model.NegotiateResponse;
 import com.punuo.sys.sip.request.BaseSipRequest;
 import com.punuo.sys.sip.request.SipDevRegisterRequest;
+import com.punuo.sys.sip.request.SipGetDevSeedRequest;
 
 import org.zoolu.sip.message.Message;
 
@@ -34,6 +35,7 @@ public class RegisterService extends NormalRequestService<NegotiateResponse> {
 
     @Override
     public void handleTimeOut(BaseSipRequest baseSipRequest) {
-
+        SipGetDevSeedRequest getDevSeedRequest = new SipGetDevSeedRequest();
+        SipDevManager.getInstance().addRequest(getDevSeedRequest);
     }
 }
