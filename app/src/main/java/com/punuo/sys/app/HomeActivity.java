@@ -520,7 +520,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         switch (msg.what) {
             case MSG_HEART_BEAR_VALUE:
                 HeartBeatHelper.heartBeat();
-                mBaseHandler.sendEmptyMessageDelayed(MSG_HEART_BEAR_VALUE, HeartBeatHelper.DELAY);
                 break;
             default:
                 break;
