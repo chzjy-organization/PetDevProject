@@ -547,12 +547,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(LedDataEvent ledDataEvent) {
-        onBackPressed();
+        //onBackPressed();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(ResetData result) {
-        onBackPressed();
+        //onBackPressed();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -560,11 +560,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         AudioManager am = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
         if (TextUtils.equals(result.volume, "raise")) {
             am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
-            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_RAISE, 0);
+            //am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_RAISE, 0);
         }
         if (TextUtils.equals(result.volume, "lower")) {
             am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
-            am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_LOWER, 0);
+            //am.adjustStreamVolume(AudioManager.STREAM_DTMF, AudioManager.ADJUST_LOWER, 0);
         }
     }
 
