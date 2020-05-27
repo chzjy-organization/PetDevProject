@@ -132,7 +132,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private boolean isRequest;
     private boolean isPreview;
     private boolean started = false;
-
+    private static int unitWeight;
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -159,6 +159,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         registerReceiver(networkChangeReceiver, intentFilter);
         mNativeStreamer = new NativeStreamer();
         initDetection();
+        unitWeight=unitQuality();
         mCameraHelper.setOnPreviewFrameListener(data -> {
             //推流
             if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
@@ -187,22 +188,23 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             /**
              * 测试设备初始重量
              */
-            int sum = 0;
-            int one_quality;//单次称重
-            ArrayList<Integer> arrayList = new ArrayList<>();
-            mPetWeight = new PetWeight();
-            for (int i = 0; i < 100; i++) {
-                one_quality = mPetWeight.getWeight();
-                arrayList.add(one_quality);
-            }
-            Collections.sort(arrayList);
-            arrayList.subList(0, 10).clear();
-            arrayList.subList(arrayList.size() - 10, arrayList.size()).clear();
-            Log.i("weight", "" + arrayList.size());
-            for (int i = 0; i < arrayList.size(); i++) {
-                sum += arrayList.get(i);
-            }
-            Log.i("weight", "平均值为" + sum / 80);
+//            int sum = 0;
+//            int one_quality;//单次称重
+//            ArrayList<Integer> arrayList = new ArrayList<>();
+//            mPetWeight = new PetWeight();
+//            for (int i = 0; i < 100; i++) {
+//                one_quality = mPetWeight.getWeight();
+//                arrayList.add(one_quality);
+//            }
+//            Collections.sort(arrayList);
+//            arrayList.subList(0, 10).clear();
+//            arrayList.subList(arrayList.size() - 10, arrayList.size()).clear();
+//            Log.i("weight", "" + arrayList.size());
+//            for (int i = 0; i < arrayList.size(); i++) {
+//                sum += arrayList.get(i);
+//            }
+            int sun=unitQuality();
+            Log.i("weight", "平均值为" + sun);
 
         });
         findViewById(R.id.reset).setOnClickListener(view -> recordMovie());
@@ -357,14 +359,35 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             sum += arrayList.get(i);
         }
         Log.i("weight", "平均值为" + sum / 80);
-        if (((sum / 80) - 1105) > 0) {
-            fQuality = ((sum / 80) - 1105) * (100 / 17);
+        if (((sum / 80) - unitWeight) > 0) {
+            fQuality = ((sum / 80) - unitWeight) * (110 / 18);
         } else {
-            fQuality = -((sum / 80) - 1105) * (100 / 17);
+            fQuality = -((sum / 80) - unitWeight) * (110 / 18);
         }
         quality = Math.round(fQuality);
         Log.i("weight", "重量为" + quality);
         return String.valueOf(quality);
+    }
+
+    public int unitQuality(){
+        int sum=0;
+        int one_quality;//单次称重
+        /*
+         **对称重结果进行均值，减小误差
+         */
+        ArrayList<Integer>arrayList=new ArrayList<>();
+        mPetWeight= new PetWeight();
+        for(int i=0;i <100;i++){
+            one_quality=mPetWeight.getWeight();
+            arrayList.add(one_quality);
+        }
+        Collections.sort(arrayList);
+        arrayList.subList(0,10).clear();
+        arrayList.subList(arrayList.size()-10,arrayList.size()).clear();
+        for(int i=0;i<arrayList.size();i++){
+            sum+=arrayList.get(i);
+        }
+        return sum/80;
     }
 
     /**
