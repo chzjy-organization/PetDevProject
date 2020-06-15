@@ -27,4 +27,8 @@ public class ServicePath {
 
     public static final String PATH_MUSIC="/sip/play_music_response";
     public static final String PATH_VOLUME="/sip/music_volume_response";
+    //视频
+    public static final String PATH_QUERY = "/sip/query";
+    public static final String PATH_MEDIA = "/sip/media";
+    public static final String PATH_RECVADDR = "/sip/recvaddr";
 }

@@ -48,18 +48,18 @@ import android.view.Surface;
 import android.view.WindowManager;
 
 import com.leplay.petwight.PetWeight;
-import com.punuo.stream.NativeStreamer;
 import com.punuo.sys.app.RotationControl.TurnAndStop;
 import com.punuo.sys.app.camera.UVCCameraHelper;
 import com.punuo.sys.app.detection.MotionDetector;
 import com.punuo.sys.app.detection.MotionDetectorCallback;
+import com.punuo.sys.app.event.FeedEvent;
 import com.punuo.sys.app.event.LedDataEvent;
 import com.punuo.sys.app.event.VolumeChangedEvent;
-import com.punuo.sys.app.event.FeedEvent;
 import com.punuo.sys.app.feed.plan.FeedAlarmManager;
 import com.punuo.sys.app.feed.plan.FeedPlanEvent;
 import com.punuo.sys.app.led.LedControl;
 import com.punuo.sys.app.process.ProcessTasks;
+import com.punuo.sys.app.video.RTPVideoManager;
 import com.punuo.sys.app.weighing.requset.GetGroupMemberRequest;
 import com.punuo.sys.app.weighing.requset.SaveOutedRequest;
 import com.punuo.sys.app.weighing.requset.SipGetWeightRequest;
@@ -80,13 +80,13 @@ import com.punuo.sys.sip.HeartBeatHelper;
 import com.punuo.sys.sip.SipDevManager;
 import com.punuo.sys.sip.config.SipConfig;
 import com.punuo.sys.sip.event.ReRegisterEvent;
+import com.punuo.sys.sip.event.StartVideoEvent;
 import com.punuo.sys.sip.model.FeedNotifyData;
 import com.punuo.sys.sip.model.FeedPlan;
 import com.punuo.sys.sip.model.LoginResponse;
 import com.punuo.sys.sip.model.MusicData;
 import com.punuo.sys.sip.model.RecvaddrData;
 import com.punuo.sys.sip.model.ResetData;
-import com.punuo.sys.sip.model.VideoData;
 import com.punuo.sys.sip.model.VolumeData;
 import com.punuo.sys.sip.model.WiFiData;
 import com.punuo.sys.sip.request.SipGetDevSeedRequest;
@@ -115,7 +115,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private static final boolean DEBUG = true;
     private static final String TAG = "HomeActivity";
     public static final int MSG_HEART_BEAR_VALUE = 10086;
-    private NativeStreamer mNativeStreamer;
     private WifiManager mWifiManager;
     private TurnAndStop turn = new TurnAndStop();
     private LedControl ledControl;
@@ -141,7 +140,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         ProcessTasks.commonLaunchTasks(PnApplication.getInstance());
-
+        H264Config.videoNum = 0;
         mBaseHandler = new BaseHandler(this);
         mUVCCameraView = findViewById(R.id.camera_surface_view);
         initSurfaceViewSize();
@@ -157,12 +156,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
         networkChangeReceiver = new NetworkChangeReceiver();
         registerReceiver(networkChangeReceiver, intentFilter);
-        mNativeStreamer = new NativeStreamer();
         initDetection();
         mCameraHelper.setOnPreviewFrameListener(data -> {
             //推流
-            if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
-                mNativeStreamer.onPreviewFrame(data, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+            if (started && isPreview) {
+                RTPVideoManager.getInstance().onPreviewFrame(data);
             }
             //移动侦测
             if (mMotionDetector != null) {
@@ -434,10 +432,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private int retryTimes = 0;
 
     private void encodeStart() {
-        if (mNativeStreamer != null) {
-            rtmpOpenResult = mNativeStreamer.startPublish(H264Config.RTMP_STREAM,
-                    H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
-        }
         if (rtmpOpenResult != -1) {
             Log.i(TAG, "encodeStart: 开始推流");
             ToastUtils.showToast("开始推流");
@@ -460,10 +454,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             Log.i(TAG, "encodeStart: 失败次数过多");
             //TODO 通知服务器推流失败,让用户尝试
         }
-    }
-
-    private void encodeStop() {
-        mNativeStreamer.stopPublish();
     }
 
     @Override
@@ -492,25 +482,28 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
     }
 
-
+    /**
+     * 结束视频传输
+     * @param event
+     */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
         started = false;
-        ToastUtils.showToast("停止推流");
         mBaseHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                encodeStop();
+                RTPVideoManager.getInstance().close();
             }
-        }, 1000);
+        }, 500);
     }
 
+    /**
+     * 开始启动视频传输
+     * @param startVideoEvent
+     */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(VideoData videoData) {
-        if (started) {
-            return;
-        }
-        encodeStart();
+    public void onMessageEvent(StartVideoEvent startVideoEvent) {
+        RTPVideoManager.getInstance().start();
         started = true;
     }
 
