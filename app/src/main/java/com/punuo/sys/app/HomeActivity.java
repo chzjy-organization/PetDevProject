@@ -40,6 +40,7 @@ import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.text.TextUtils;
@@ -159,7 +160,15 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         registerReceiver(networkChangeReceiver, intentFilter);
         mNativeStreamer = new NativeStreamer();
         initDetection();
-        unitWeight=unitQuality();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                unitWeight=unitQuality();
+                Log.i("weight", "测得的初始重量为"+unitWeight);
+            }
+        },1000*10);
+
         mCameraHelper.setOnPreviewFrameListener(data -> {
             //推流
             if (started && isPreview && mNativeStreamer != null && rtmpOpenResult != -1) {
@@ -186,26 +195,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
 
         findViewById(R.id.weight).setOnClickListener(view -> {
             /**
-             * 测试设备初始重量
+             * 测试设备
              */
-//            int sum = 0;
-//            int one_quality;//单次称重
-//            ArrayList<Integer> arrayList = new ArrayList<>();
-//            mPetWeight = new PetWeight();
-//            for (int i = 0; i < 100; i++) {
-//                one_quality = mPetWeight.getWeight();
-//                arrayList.add(one_quality);
-//            }
-//            Collections.sort(arrayList);
-//            arrayList.subList(0, 10).clear();
-//            arrayList.subList(arrayList.size() - 10, arrayList.size()).clear();
-//            Log.i("weight", "" + arrayList.size());
-//            for (int i = 0; i < arrayList.size(); i++) {
-//                sum += arrayList.get(i);
-//            }
             int sun=unitQuality();
-            Log.i("weight", "平均值为" + sun);
-
+            int sun1 = sun-unitWeight;
+            Log.i("weight", "此时称得数值为"+sun);
+            Log.i("weight", "放入一定值之后的差值为" + sun1);
         });
         findViewById(R.id.reset).setOnClickListener(view -> recordMovie());
         //截屏操作
