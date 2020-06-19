@@ -15,12 +15,12 @@ import tech.shutu.jni.YuvUtils;
  * Created by han.chen.
  * Date on 2020/6/14.
  **/
-public class AvcEncoder {
+public class MediaEncoder {
     private static final String TAG = "AvcEncoder";
     private MediaCodec mediaCodec;
     private int count = 0;
 
-    public AvcEncoder() {
+    public MediaEncoder() {
     }
 
     public void start() {

@@ -49,6 +49,7 @@ import android.view.WindowManager;
 
 import com.leplay.petwight.PetWeight;
 import com.punuo.sys.app.RotationControl.TurnAndStop;
+import com.punuo.sys.app.audio.MediaAudioManager;
 import com.punuo.sys.app.camera.UVCCameraHelper;
 import com.punuo.sys.app.detection.MotionDetector;
 import com.punuo.sys.app.detection.MotionDetectorCallback;
@@ -428,34 +429,6 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
         }
     }
 
-    private int rtmpOpenResult = -1; //推流启动是否成功  -1:失败 0: 成功
-    private int retryTimes = 0;
-
-    private void encodeStart() {
-        if (rtmpOpenResult != -1) {
-            Log.i(TAG, "encodeStart: 开始推流");
-            ToastUtils.showToast("开始推流");
-        } else {
-            retryTimes++;
-            startPushError();
-        }
-    }
-
-    private void startPushError() {
-        if (retryTimes < 5) {
-            Log.i(TAG, "encodeStart: 开启推流失败,正在重试,次数: " + retryTimes + " 次");
-            mBaseHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    encodeStart();
-                }
-            }, 1000);
-        } else {
-            Log.i(TAG, "encodeStart: 失败次数过多");
-            //TODO 通知服务器推流失败,让用户尝试
-        }
-    }
-
     @Override
     protected void onDestroy() {
         if (mCameraHelper != null) {
@@ -489,11 +462,9 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RecvaddrData event) {
         started = false;
-        mBaseHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                RTPVideoManager.getInstance().close();
-            }
+        mBaseHandler.postDelayed(() -> {
+            RTPVideoManager.getInstance().close();
+            MediaAudioManager.getInstance().stopAudioRecord();
         }, 500);
     }
 
@@ -504,6 +475,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(StartVideoEvent startVideoEvent) {
         RTPVideoManager.getInstance().start();
+        MediaAudioManager.getInstance().startAudioRecord();
         started = true;
     }
 

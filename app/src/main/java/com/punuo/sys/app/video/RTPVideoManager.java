@@ -33,9 +33,9 @@ public class RTPVideoManager {
     public DatagramSocket rtpSocket;
     public DatagramSocket rtcpSocket;
     public RTPSession videoSession;
-    public RTPSession voiceSession;
 
-    public AvcEncoder mediaEncoder;
+
+    public MediaEncoder mediaEncoder;
 
     private RTPVideoManager() {
         try {
@@ -45,13 +45,11 @@ public class RTPVideoManager {
             e.printStackTrace();
         }
         videoSession = new RTPSession(rtpSocket, rtcpSocket);
-        voiceSession = new RTPSession(rtpSocket, rtcpSocket);
+
         Participant participant = new Participant(H264Config.rtpIp, H264Config.rtpPort, H264Config.rtpPort + 1);
         videoSession.addParticipant(participant);
-        voiceSession.addParticipant(participant);
         videoSession.setSsrc(H264Config.sSrc);
-        voiceSession.setSsrc(H264Config.sSrc);
-        mediaEncoder = new AvcEncoder();
+        mediaEncoder = new MediaEncoder();
     }
 
     public void start() {
