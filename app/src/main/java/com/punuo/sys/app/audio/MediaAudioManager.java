@@ -59,9 +59,6 @@ public class MediaAudioManager {
 
     public void stopAudioRecord() {
         started = false;
-        if (mAudioThread != null) {
-            mAudioThread.interrupt();
-        }
     }
 
     private AudioRecord getAudioRecord() {
@@ -118,8 +115,6 @@ public class MediaAudioManager {
                 G711.linear2ulaw(audioData, 0, encodeData, numRead);
                 voiceSession.payloadType(0x45);
                 voiceSession.sendData(encodeData);
-
-
             }
             record.stop();
             record.release();

@@ -104,12 +104,12 @@ public class RTPVideoManager {
      */
     private byte[] SPSAndPPS = {
             0x00, 0x00, 0x00, 0x01, 0x67,
-            0x42, 0x00, 0x29, (byte) 0x8d,
-            (byte) 0x8d, 0x40, (byte) 0x50,
-            0x1e, (byte) 0xd0, 0x0f, 0x08,
-            (byte) 0x84, 0x53, (byte) 0x80,
+            0x42, 0x00, 0x29, (byte) 0x73,
+            (byte) 0x73, 0x40, (byte) 0x50,
+            0x1e, (byte) 0x30, 0x0f, 0x08,
+            (byte) 0x7c, 0x53, (byte) 0x80,
             0x00, 0x00, 0x00, 0x01, 0x68,
-            (byte) 0xca, 0x43, (byte) 0xc8
+            (byte) 0x36, 0x43
     };
     private boolean sendPPSAndSPS = true;
 
@@ -158,7 +158,7 @@ public class RTPVideoManager {
         firstPktReceived = true;
         videoSession.payloadType(0x62);
         videoSession.sendData(rtpPkt);
-        Log.d(TAG, "sendFirstPacket");
+        Log.d(TAG, "sendFirstPacket length = " + encodeData.length);
     }
 
     public void sendMiddlePacket(byte[] encodeData) {
@@ -174,7 +174,7 @@ public class RTPVideoManager {
         videoSession.payloadType(0x62);
         videoSession.sendData(rtpPkt);
         pktIndex += DIVIDE_LENGTH;
-        Log.d(TAG, "sendMiddlePacket");
+        Log.d(TAG, "sendMiddlePacket length = " + encodeData.length);
     }
 
     public void sendLastPacket(byte[] encodeData) {
@@ -191,13 +191,13 @@ public class RTPVideoManager {
         videoSession.payloadType(0x62);
         videoSession.sendData(rtpPkt);
         dividingStatus = false;
-        Log.d(TAG, "sendLastPacket");
+        Log.d(TAG, "sendLastPacket length = " + encodeData.length);
     }
 
     public void sendCompletePacket(byte[] encodeData) {
         videoSession.payloadType(0x62);
         videoSession.sendData(encodeData);
-        Log.d(TAG, "sendCompletePacket");
+        Log.d(TAG, "sendCompletePacket length = " + encodeData.length);
     }
 
 }
