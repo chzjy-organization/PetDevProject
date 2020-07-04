@@ -42,7 +42,7 @@ public class MediaEncoder {
 
     public byte[] offerEncode(byte[] input) {
         byte[] output = null;
-        input = swapYV12toI420(input, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
+        input = nv21ToI420(input, H264Config.VIDEO_WIDTH, H264Config.VIDEO_HEIGHT);
         try {
             ByteBuffer[] inputBuffers = mediaCodec.getInputBuffers();
             ByteBuffer[] outputBuffers = mediaCodec.getOutputBuffers();
@@ -64,6 +64,23 @@ public class MediaEncoder {
             t.printStackTrace();
         }
         return output;
+    }
+
+    public byte[] nv21ToI420(byte[] data, int width, int height) {
+        byte[] ret = new byte[data.length];
+        int total = width * height;
+
+        ByteBuffer bufferY = ByteBuffer.wrap(ret, 0, total);
+        ByteBuffer bufferU = ByteBuffer.wrap(ret, total, total / 4);
+        ByteBuffer bufferV = ByteBuffer.wrap(ret, total + total / 4, total / 4);
+
+        bufferY.put(data, 0, total);
+        for (int i=total; i<data.length; i+=2) {
+            bufferV.put(data[i]);
+            bufferU.put(data[i+1]);
+        }
+
+        return ret;
     }
 
     private byte[] swapYV12toI420(byte[] yv12bytes, int width, int height) {

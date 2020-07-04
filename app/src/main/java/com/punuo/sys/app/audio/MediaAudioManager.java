@@ -38,7 +38,7 @@ public class MediaAudioManager {
     private boolean started = false;
     private AudioThread mAudioThread;
 
-    private MediaAudioManager() {
+    public void init() {
         try {
             rtpSocket = new DatagramSocket();
             rtcpSocket = new DatagramSocket();
@@ -52,6 +52,7 @@ public class MediaAudioManager {
     }
 
     public void startAudioRecord() {
+        init();
         started = true;
         mAudioThread = new AudioThread();
         mAudioThread.start();

@@ -37,7 +37,7 @@ public class RTPVideoManager {
 
     public MediaEncoder mediaEncoder;
 
-    private RTPVideoManager() {
+    private void init() {
         try {
             rtpSocket = new DatagramSocket();
             rtcpSocket = new DatagramSocket();
@@ -53,7 +53,9 @@ public class RTPVideoManager {
     }
 
     public void start() {
+        init();
         mediaEncoder.start();
+
     }
 
     public void close() {
@@ -72,10 +74,16 @@ public class RTPVideoManager {
             videoSession.sendData(msg);
         }
     }
-
+    boolean a = true;
     public void onPreviewFrame(byte[] data) {
         byte[] encodeResult = mediaEncoder.offerEncode(data);
         if (encodeResult != null && encodeResult.length > 0) {
+            if (a) {
+                for (int i = 0; i < encodeResult.length; i++) {
+                    System.out.println(encodeResult[i]);
+                }
+                a = false;
+            }
             sendActivePacket();
             divideAndSendNal(encodeResult);
         }
@@ -109,7 +117,7 @@ public class RTPVideoManager {
             0x1e, (byte) 0x30, 0x0f, 0x08,
             (byte) 0x7c, 0x53, (byte) 0x80,
             0x00, 0x00, 0x00, 0x01, 0x68,
-            (byte) 0x36, 0x43
+            (byte) 0x36, 0x43, 0x38
     };
     private boolean sendPPSAndSPS = true;
 
