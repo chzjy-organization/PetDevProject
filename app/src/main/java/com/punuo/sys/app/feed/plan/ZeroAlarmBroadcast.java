@@ -35,8 +35,8 @@ public class ZeroAlarmBroadcast extends BroadcastReceiver {
             @Override
             public void onSuccess(PlanModel result) {
                 if (result == null || result.mPlanList == null) {
-                    return;
-                }
+                return;
+            }
                 for (int i = 0; i < result.mPlanList.size(); i += 1) {
                     FeedPlan plan = result.mPlanList.get(i);
                     FeedAlarmManager.getInstance().addAlarmTask(context, plan);

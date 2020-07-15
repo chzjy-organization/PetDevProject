@@ -125,7 +125,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
     private PetWeight mPetWeight;
     private MotionDetector mMotionDetector; //移动侦测
     private MediaPlayer mMediaPlayer;
-    private static String quality;
+    private static int remainder;
 
     private UVCCameraHelper mCameraHelper;
     private UVCCameraTextureView mUVCCameraView;
@@ -165,6 +165,7 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void run() {
                 unitWeight=unitQuality();
+                remainder = unitWeight;
                 Log.i("weight", "测得的初始重量为"+unitWeight);
             }
         },1000*10);
@@ -653,9 +654,11 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
                 @Override
                 public void run() {
                     turn.turnStop();
-                    quality = getQuality();
+                    //TODO 假设每一份为10g，每次漏食后总重量减掉（份数*10）
+                    remainder -=(count*10);
+                    String quality = String.valueOf(remainder);
                     getGroupMember(quality, SipConfig.getDevId());
-                    float fOutQuality = Math.round(count * 7.5);
+                    float fOutQuality = Math.round(count * 10);
                     int outQuality = (int) fOutQuality;
                     weightDataToWeb(SipConfig.getDevId(), String.valueOf(outQuality), quality);
                 }
@@ -672,9 +675,12 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void run() {
                 turn.turnStop();
-                quality = getQuality();
+//                quality = getQuality();
+                //TODO 假设每一份为10g，每次漏食后总重量减掉（份数*10）
+                remainder -=(3*10);
+                String quality = String.valueOf(remainder);
                 getGroupMember(quality, SipConfig.getDevId());
-                int outQuality = (int) (3 * 7.5) + 1;
+                int outQuality = (3 * 10);
                 weightDataToWeb(SipConfig.getDevId(), String.valueOf(outQuality), quality);
             }
         }, 36 * 1042);
@@ -707,10 +713,13 @@ public class HomeActivity extends BaseActivity implements CameraDialog.CameraDia
             @Override
             public void run() {
                 turn.turnStop();
-                quality = getQuality();
+//                quality = getQuality();
+                //TODO 假设每一份为10g，每次漏食后总重量减掉（份数*10）
+                remainder -=(feedPlanEvent.mCount*10);
+                String quality = String.valueOf(remainder);
                 getGroupMember(quality, SipConfig.getDevId());
                 saveOutedCount(feedPlanEvent.mCount);
-                int outQuality = (int) Math.round(feedPlanEvent.mCount * 7.5);
+                int outQuality = (int) Math.round(feedPlanEvent.mCount * 10);
                 weightDataToWeb(SipConfig.getDevId(), String.valueOf(outQuality), quality);
             }
         }, feedPlanEvent.mCount * 12 * 1042);
